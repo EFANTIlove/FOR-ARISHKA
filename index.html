@@ -2,838 +2,2089 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Для Аришки 💗💜</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>2048 — Полная версия</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            cursor: none;
+        :root {
+            --bg: #faf8ef;
+            --text: #776e65;
+            --header-text: #776e65;
+            --grid-bg: #bbada0;
+            --cell-bg: #cdc1b4;
+            --score-bg: #bbada0;
+            --score-text: #fff;
+            --btn-bg: #8f7a66;
+            --btn-hover: #9f8b76;
+            --gameover-color: #ff6b6b;
+            --modal-bg: rgba(0,0,0,0.5);
+            --modal-content: #fff;
+            --modal-text: #333;
+            --shop-item-bg: #f0eee9;
+            --shop-item-border: #d0cdc4;
+            --hint-bg: rgba(0,0,0,0.05);
+            --achievement-bg: #f0eee9;
+            --achievement-border: #d0cdc4;
+            --bonus-glow: #ffd700;
         }
+
+        body.dark {
+            --bg: #1a1a2e;
+            --text: #e0e0e0;
+            --header-text: #e0e0e0;
+            --grid-bg: #16213e;
+            --cell-bg: #2a3a5e;
+            --score-bg: #0f3460;
+            --score-text: #e0e0e0;
+            --btn-bg: #0f3460;
+            --btn-hover: #1a4a7a;
+            --gameover-color: #ff6b6b;
+            --modal-bg: rgba(0,0,0,0.7);
+            --modal-content: #1a1a2e;
+            --modal-text: #e0e0e0;
+            --shop-item-bg: #2a2a4a;
+            --shop-item-border: #3a3a5a;
+            --hint-bg: rgba(255,255,255,0.05);
+            --achievement-bg: #2a2a4a;
+            --achievement-border: #3a3a5a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            min-height: 100vh;
-            background: #0d0015;
-            font-family: 'Georgia', serif;
-            overflow-x: hidden;
-            color: #fff;
-            scroll-behavior: smooth;
-        }
-
-        /* ---------- КАСТОМНЫЙ КУРСОР ---------- */
-        .custom-cursor {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            font-size: 32px;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s;
-            filter: drop-shadow(0 0 20px rgba(255, 0, 100, 0.5));
-        }
-        .custom-cursor::after {
-            content: '💜';
-            display: block;
-            animation: cursorPulse 1s ease-in-out infinite;
-        }
-        @keyframes cursorPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-
-        /* ---------- КОМПЛИМЕНТЫ НА ВЕСЬ ЭКРАН ---------- */
-        .floating-compliment {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-            font-size: clamp(40px, 8vw, 80px);
-            font-weight: 700;
-            pointer-events: none;
-            opacity: 0;
-            animation: complimentAnim 3s ease-out forwards;
-            background: linear-gradient(135deg, #ff6b9d, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 60px rgba(192, 132, 252, 0.3));
-            text-align: center;
-            line-height: 1.4;
-            white-space: nowrap;
-        }
-        @keyframes complimentAnim {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-10deg); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(2deg); }
-            40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-            80% { opacity: 1; }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5) rotate(5deg); }
-        }
-
-        /* ---------- ОСТАЛЬНЫЕ СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ---------- */
-        section {
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 40px 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #scene3d {
-            background: radial-gradient(ellipse at center, #1a0033 0%, #0d0015 100%);
             min-height: 100vh;
+            transition: background 0.5s, color 0.3s;
+            color: var(--text);
+            position: relative;
+            overflow-x: hidden;
         }
 
-        #three-container {
-            width: 100%;
-            height: 100vh;
+        #particles-canvas {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 0;
             pointer-events: none;
+            opacity: 0.5;
         }
+        body.dark #particles-canvas { opacity: 0.8; }
 
-        .overlay-content {
-            position: relative;
-            z-index: 5;
+        .container {
             text-align: center;
-            pointer-events: none;
-        }
-        .overlay-content h1 {
-            font-size: clamp(36px, 8vw, 80px);
-            font-weight: 700;
-            background: linear-gradient(135deg, #ff6b9d, #c084fc, #ff6b9d);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientMove 4s ease-in-out infinite;
-            filter: drop-shadow(0 0 40px rgba(192, 132, 252, 0.3));
-            margin-bottom: 20px;
-            letter-spacing: 4px;
-        }
-        @keyframes gradientMove {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .subtitle {
-            font-size: clamp(18px, 3vw, 32px);
-            color: #d4b8d0;
-            font-style: italic;
-            letter-spacing: 3px;
-            opacity: 0.8;
-            animation: floatText 3s ease-in-out infinite;
-        }
-        @keyframes floatText {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .scroll-hint {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            font-size: 14px;
-            color: rgba(255,255,255,0.3);
-            letter-spacing: 2px;
-            animation: bounceDown 2s infinite;
-            cursor: pointer;
-            pointer-events: all;
-        }
-        @keyframes bounceDown {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(10px); }
-        }
-
-        #confession {
-            background: linear-gradient(180deg, #1a0033 0%, #2d0a4a 40%, #1a0033 100%);
-            justify-content: center;
-            min-height: 100vh;
-            padding: 60px 20px;
-        }
-
-        .confession-box {
-            max-width: 700px;
+            max-width: 529px;
             width: 100%;
-            background: rgba(20, 10, 30, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(192, 132, 252, 0.15);
-            border-radius: 48px;
-            padding: 50px 45px 40px;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.7), 0 0 80px rgba(192, 132, 252, 0.05);
+            padding: 15px;
             position: relative;
-            z-index: 5;
-            animation: appearBox 1s ease-out;
-        }
-        @keyframes appearBox {
-            0% { opacity: 0; transform: scale(0.9) translateY(30px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
+            z-index: 1;
         }
 
-        .confession-box h2 {
-            font-size: clamp(24px, 4vw, 38px);
-            text-align: center;
-            background: linear-gradient(135deg, #ff6b9d, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 25px;
-            letter-spacing: 2px;
-        }
-
-        .confession-text {
-            font-size: clamp(16px, 2vw, 20px);
-            line-height: 2;
-            color: #e8dce8;
-            text-align: justify;
-            padding: 0 5px;
-        }
-        .confession-text p {
-            margin-bottom: 18px;
-            text-indent: 30px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.8s ease forwards;
-        }
-        .confession-text p:nth-child(1) { animation-delay: 0.2s; }
-        .confession-text p:nth-child(2) { animation-delay: 0.7s; }
-        .confession-text p:nth-child(3) { animation-delay: 1.2s; }
-        .confession-text p:nth-child(4) { animation-delay: 1.7s; }
-
-        @keyframes fadeInUp {
+        .page { display: none; animation: fadePage 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadePage {
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        #firetext {
-            background: #0d0015;
-            min-height: 100vh;
+        .menu-title {
+            font-size: 70.6px;
+            font-weight: bold;
+            color: var(--header-text);
+            margin: 30px 0 5px;
+            transition: color 0.3s;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .menu-subtitle {
+            font-size: 13.7px;
+            opacity: 0.6;
+            margin-bottom: 20px;
+        }
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 274px;
+            margin: 0 auto;
+        }
+        .menu-btn {
+            padding: 11.8px;
+            font-size: 15.7px;
+            font-weight: bold;
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .menu-btn:hover { background: var(--btn-hover); transform: scale(1.02); }
+        .menu-btn:active { transform: scale(0.98); }
+        .menu-btn-secondary { background: #6c5b7b; }
+        .menu-btn-secondary:hover { background: #7d6b8d; }
+        .menu-btn-success { background: #27ae60; }
+        .menu-btn-success:hover { background: #2ecc71; }
+        .menu-btn-small { font-size: 13.7px; padding: 7.8px; background: #5a6b7c; }
+        .menu-btn-small:hover { background: #6a7b8c; }
+        .menu-coins {
+            font-size: 15.7px;
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 11.8px;
+            flex-wrap: wrap;
+            gap: 5.9px;
+        }
+        .title-block {
+            display: flex;
+            align-items: center;
+            gap: 5.9px;
+        }
+        .back-btn {
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 4.9px 9.8px;
+            font-size: 15.7px;
+            cursor: pointer;
+            transition: 0.2s;
+            line-height: 1;
+        }
+        .back-btn:hover { background: var(--btn-hover); }
+        h1 {
+            font-size: 21.6px;
+            color: var(--header-text);
+            margin: 0;
+            transition: color 0.3s;
+        }
+        .coins-display {
+            background: var(--score-bg);
+            color: var(--score-text);
+            padding: 2.9px 9.8px;
+            border-radius: 6px;
+            font-size: 11.8px;
+            transition: background 0.3s;
+        }
+        .coins-display span {
+            font-weight: bold;
+            font-size: 14.7px;
+            display: block;
+        }
+
+        .scores {
+            display: flex;
+            gap: 5.9px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 5.9px;
+        }
+        .score-container {
+            background: var(--score-bg);
+            color: var(--score-text);
+            padding: 2.9px 9.8px;
+            border-radius: 6px;
+            font-size: 10.8px;
+            transition: background 0.3s, color 0.3s;
+            min-width: 49px;
+        }
+        .score-container span {
+            font-weight: bold;
+            font-size: 15.7px;
+            display: block;
+        }
+
+        .grid-wrapper {
+            position: relative;
+            background: var(--grid-bg);
+            border-radius: 7.8px;
+            padding: 7.8px;
+            aspect-ratio: 1 / 1;
+            transition: background 0.5s;
+            touch-action: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            gap: 7.8px;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+        .cell-bg {
+            background: var(--cell-bg);
+            border-radius: 5.9px;
+            aspect-ratio: 1 / 1;
+            transition: background 0.3s;
+        }
+
+        .tile {
+            position: absolute;
+            border-radius: 5.9px;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
+            font-weight: bold;
+            color: #776e65;
+            font-size: 25.5px;
+            transition: top 0.12s ease, left 0.12s ease, transform 0.12s ease;
+            z-index: 10;
+            will-change: top, left, transform;
+        }
+        .tile.pop {
+            animation: flyUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes flyUp {
+            0% { transform: translateY(30px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .tile.merge {
+            animation: mergePop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes mergePop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.35); }
+            100% { transform: scale(1); }
         }
 
-        .fire-container {
-            position: relative;
-            z-index: 5;
-            text-align: center;
-            padding: 20px;
-        }
+        .tile[data-value="2"] { background: #eee4da; }
+        .tile[data-value="4"] { background: #ede0c8; }
+        .tile[data-value="8"] { background: #f2b179; color: white; }
+        .tile[data-value="16"] { background: #f59563; color: white; }
+        .tile[data-value="32"] { background: #f67c5f; color: white; }
+        .tile[data-value="64"] { background: #f65e3b; color: white; }
+        .tile[data-value="128"] { background: #edcf72; color: white; font-size: 21.6px; }
+        .tile[data-value="256"] { background: #edcc61; color: white; font-size: 21.6px; }
+        .tile[data-value="512"] { background: #edc850; color: white; font-size: 21.6px; }
+        .tile[data-value="1024"] { background: #edc53f; color: white; font-size: 17.6px; }
+        .tile[data-value="2048"] { background: #edc22e; color: white; font-size: 17.6px; }
+        .tile[data-value="4096"] { background: #b884cb; color: white; font-size: 15.7px; }
+        .tile[data-value="8192"] { background: #a04eb3; color: white; font-size: 15.7px; }
 
-        .fire-text {
-            font-size: clamp(40px, 10vw, 100px);
-            font-weight: 900;
-            font-family: 'Georgia', serif;
-            color: #ff6b35;
-            text-shadow: 
-                0 0 20px #ff4500,
-                0 0 40px #ff4500,
-                0 0 80px #ff6b35,
-                0 0 120px #ff2d75,
-                0 0 160px #c084fc;
-            animation: firePulse 1.5s ease-in-out infinite alternate;
-            letter-spacing: 6px;
-            background: linear-gradient(180deg, #ffd700 0%, #ff4500 40%, #ff2d75 80%, #c084fc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 60px rgba(255, 69, 0, 0.3));
-        }
-        @keyframes firePulse {
-            0% { transform: scale(1) rotate(-0.5deg); text-shadow: 0 0 20px #ff4500, 0 0 40px #ff4500; }
-            100% { transform: scale(1.03) rotate(0.5deg); text-shadow: 0 0 40px #ff4500, 0 0 80px #ff6b35, 0 0 120px #ff2d75; }
-        }
+        .tile.green[data-value="2"] { background: #a8e6cf; color: #2d5a3a; }
+        .tile.green[data-value="4"] { background: #7bcfb2; color: #1e3d2a; }
+        .tile.green[data-value="8"] { background: #4caf84; color: white; }
+        .tile.green[data-value="16"] { background: #2e8b6c; color: white; }
+        .tile.green[data-value="32"] { background: #1a6b52; color: white; }
+        .tile.green[data-value="64"] { background: #0f4d3a; color: white; }
+        .tile.green[data-value="128"] { background: #0a3d2e; color: white; font-size: 21.6px; }
+        .tile.green[data-value="256"] { background: #063023; color: white; font-size: 21.6px; }
+        .tile.green[data-value="512"] { background: #042218; color: white; font-size: 21.6px; }
+        .tile.green[data-value="1024"] { background: #02150e; color: white; font-size: 17.6px; }
+        .tile.green[data-value="2048"] { background: #010d08; color: #ffd700; font-size: 17.6px; }
 
-        .fire-sub {
-            font-size: clamp(16px, 2vw, 24px);
-            color: #b8a0c0;
-            margin-top: 30px;
-            letter-spacing: 4px;
-            animation: floatText 3s ease-in-out infinite;
+        .tile.pink[data-value="2"] { background: #fce4ec; color: #6a2e4a; }
+        .tile.pink[data-value="4"] { background: #f8bbd0; color: #5a1e3a; }
+        .tile.pink[data-value="8"] { background: #f48fb1; color: white; }
+        .tile.pink[data-value="16"] { background: #ec407a; color: white; }
+        .tile.pink[data-value="32"] { background: #d81b60; color: white; }
+        .tile.pink[data-value="64"] { background: #ad1457; color: white; }
+        .tile.pink[data-value="128"] { background: #880e4f; color: white; font-size: 21.6px; }
+        .tile.pink[data-value="256"] { background: #6a0d3a; color: white; font-size: 21.6px; }
+        .tile.pink[data-value="512"] { background: #4a0828; color: white; font-size: 21.6px; }
+        .tile.pink[data-value="1024"] { background: #300519; color: white; font-size: 17.6px; }
+        .tile.pink[data-value="2048"] { background: #1a020e; color: #ffd700; font-size: 17.6px; }
+
+        .tile.space[data-value="2"] { background: #b39ddb; color: #311b92; }
+        .tile.space[data-value="4"] { background: #9575cd; color: #311b92; }
+        .tile.space[data-value="8"] { background: #7e57c2; color: white; }
+        .tile.space[data-value="16"] { background: #5e35b1; color: white; }
+        .tile.space[data-value="32"] { background: #4527a0; color: white; }
+        .tile.space[data-value="64"] { background: #311b92; color: white; }
+        .tile.space[data-value="128"] { background: #1a237e; color: white; font-size: 21.6px; }
+        .tile.space[data-value="256"] { background: #0d1440; color: white; font-size: 21.6px; }
+        .tile.space[data-value="512"] { background: #060a20; color: white; font-size: 21.6px; }
+        .tile.space[data-value="1024"] { background: #030510; color: white; font-size: 17.6px; }
+        .tile.space[data-value="2048"] { background: #010208; color: #ffd700; font-size: 17.6px; }
+
+        .tile.ocean[data-value="2"] { background: #b3e5fc; color: #01579b; }
+        .tile.ocean[data-value="4"] { background: #81d4fa; color: #01579b; }
+        .tile.ocean[data-value="8"] { background: #4dd0e1; color: white; }
+        .tile.ocean[data-value="16"] { background: #26c6da; color: white; }
+        .tile.ocean[data-value="32"] { background: #00bcd4; color: white; }
+        .tile.ocean[data-value="64"] { background: #00838f; color: white; }
+        .tile.ocean[data-value="128"] { background: #006064; color: white; font-size: 21.6px; }
+        .tile.ocean[data-value="256"] { background: #004d40; color: white; font-size: 21.6px; }
+        .tile.ocean[data-value="512"] { background: #00332a; color: white; font-size: 21.6px; }
+        .tile.ocean[data-value="1024"] { background: #001f17; color: white; font-size: 17.6px; }
+        .tile.ocean[data-value="2048"] { background: #000f0b; color: #ffd700; font-size: 17.6px; }
+
+        .tile.orange[data-value="2"] { background: #ffccbc; color: #bf360c; }
+        .tile.orange[data-value="4"] { background: #ffab91; color: #bf360c; }
+        .tile.orange[data-value="8"] { background: #ff8a65; color: white; }
+        .tile.orange[data-value="16"] { background: #ff7043; color: white; }
+        .tile.orange[data-value="32"] { background: #ff5722; color: white; }
+        .tile.orange[data-value="64"] { background: #e64a19; color: white; }
+        .tile.orange[data-value="128"] { background: #bf360c; color: white; font-size: 21.6px; }
+        .tile.orange[data-value="256"] { background: #8d2e00; color: white; font-size: 21.6px; }
+        .tile.orange[data-value="512"] { background: #5f1f00; color: white; font-size: 21.6px; }
+        .tile.orange[data-value="1024"] { background: #3d1400; color: white; font-size: 17.6px; }
+        .tile.orange[data-value="2048"] { background: #1f0a00; color: #ffd700; font-size: 17.6px; }
+
+        .tile.halloween[data-value="2"] { background: #ff8a65; color: #3e2723; }
+        .tile.halloween[data-value="4"] { background: #ff6f00; color: #3e2723; }
+        .tile.halloween[data-value="8"] { background: #e65100; color: white; }
+        .tile.halloween[data-value="16"] { background: #bf360c; color: white; }
+        .tile.halloween[data-value="32"] { background: #7f2d0a; color: white; }
+        .tile.halloween[data-value="64"] { background: #4a148c; color: white; }
+        .tile.halloween[data-value="128"] { background: #311b92; color: white; font-size: 21.6px; }
+        .tile.halloween[data-value="256"] { background: #1a237e; color: white; font-size: 21.6px; }
+        .tile.halloween[data-value="512"] { background: #0d1440; color: white; font-size: 21.6px; }
+        .tile.halloween[data-value="1024"] { background: #060a20; color: white; font-size: 17.6px; }
+        .tile.halloween[data-value="2048"] { background: #010208; color: #ff6f00; font-size: 17.6px; }
+
+        .tile.winter[data-value="2"] { background: #e3f2fd; color: #0d47a1; }
+        .tile.winter[data-value="4"] { background: #bbdefb; color: #0d47a1; }
+        .tile.winter[data-value="8"] { background: #90caf9; color: white; }
+        .tile.winter[data-value="16"] { background: #64b5f6; color: white; }
+        .tile.winter[data-value="32"] { background: #42a5f5; color: white; }
+        .tile.winter[data-value="64"] { background: #1e88e5; color: white; }
+        .tile.winter[data-value="128"] { background: #1565c0; color: white; font-size: 21.6px; }
+        .tile.winter[data-value="256"] { background: #0d47a1; color: white; font-size: 21.6px; }
+        .tile.winter[data-value="512"] { background: #072a6e; color: white; font-size: 21.6px; }
+        .tile.winter[data-value="1024"] { background: #041a47; color: white; font-size: 17.6px; }
+        .tile.winter[data-value="2048"] { background: #020d24; color: #90caf9; font-size: 17.6px; }
+
+        .grid-bg-default { background: #bbada0; }
+        .grid-bg-dark { background: #16213e; }
+        .grid-bg-ocean { background: #0a3d62; }
+        .grid-bg-forest { background: #1b4d3a; }
+        .grid-bg-sunset { background: #6a2c4a; }
+        .grid-bg-space { background: #0a0a1a; }
+
+        .controls-row {
+            display: flex;
+            gap: 5.9px;
+            justify-content: center;
+            margin-top: 9.8px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 5.9px 13.7px;
+            font-size: 12.7px;
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover { background: var(--btn-hover); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-hint { background: #6c5b7b; }
+        .btn-hint:hover { background: #7d6b8d; }
+        .btn-small { font-size: 10.8px; padding: 3.9px 9.8px; }
+
+        .hint-area {
+            margin-top: 5.9px;
+            padding: 5.9px 11.8px;
+            background: var(--hint-bg);
+            border-radius: 7.8px;
+            font-size: 11.8px;
+            min-height: 33px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            color: var(--text);
             opacity: 0.7;
         }
+        .hint-area .hint-icon { margin-right: 3.9px; font-size: 13.7px; }
 
-        .magic-btn {
+        .game-over {
+            margin-top: 5.9px;
+            font-size: 21.6px;
+            color: var(--gameover-color);
+            font-weight: bold;
+            display: none;
+            transition: color 0.3s;
+        }
+        .controls-hint {
+            margin-top: 2.9px;
+            font-size: 10.8px;
+            opacity: 0.4;
+        }
+
+        .combo-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 47px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255,215,0,0.5);
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .combo-display.show {
+            opacity: 1;
+            animation: comboFloat 0.8s ease-out forwards;
+        }
+        @keyframes comboFloat {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            30% { transform: translate(-50%, -70%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -100%) scale(1); opacity: 0; }
+        }
+
+        .particle-container {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
             z-index: 100;
-            width: 70px;
-            height: 70px;
+        }
+        .particle {
+            position: absolute;
             border-radius: 50%;
+            animation: particleFly 0.6s ease-out forwards;
+            background: #ffd700;
+            box-shadow: 0 0 6px rgba(255,215,0,0.6);
+        }
+        @keyframes particleFly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .shop-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 7.8px;
+            margin-top: 9.8px;
+        }
+        .shop-item {
+            background: var(--shop-item-bg);
+            border: 2px solid var(--shop-item-border);
+            border-radius: 10px;
+            padding: 7.8px 11.8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .shop-item-info { text-align: left; }
+        .shop-item-name {
+            font-weight: bold;
+            font-size: 13.7px;
+        }
+        .shop-item-desc {
+            font-size: 10.8px;
+            opacity: 0.6;
+        }
+        .shop-btn {
+            padding: 4.9px 11.8px;
+            font-size: 11.8px;
+            font-weight: bold;
+            background: var(--btn-bg);
+            color: white;
             border: none;
-            background: radial-gradient(circle at 30% 30%, #ff6b9d, #c084fc);
-            color: #fff;
-            font-size: 34px;
-            cursor: none;
-            box-shadow: 0 8px 32px rgba(192, 132, 252, 0.4);
-            transition: all 0.3s;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .shop-btn:hover { background: var(--btn-hover); }
+        .shop-btn.owned { background: #27ae60; cursor: default; }
+        .shop-btn.owned:hover { background: #27ae60; }
+        .shop-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .shop-btn.reset-theme { background: #e74c3c; }
+        .shop-btn.reset-theme:hover { background: #c0392b; }
+
+        .achievement-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 5.9px;
+            margin-top: 9.8px;
+        }
+        .achievement-item {
+            background: var(--achievement-bg);
+            border: 2px solid var(--achievement-border);
+            border-radius: 10px;
+            padding: 7.8px 11.8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .achievement-item.unlocked {
+            border-color: #27ae60;
+            background: rgba(39,174,96,0.1);
+        }
+        .achievement-item-info { text-align: left; }
+        .achievement-item-name {
+            font-weight: bold;
+            font-size: 13.7px;
+        }
+        .achievement-item-desc {
+            font-size: 10.8px;
+            opacity: 0.6;
+        }
+        .achievement-status { font-size: 21.6px; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7.8px;
+            margin-top: 9.8px;
+        }
+        .stat-item {
+            background: var(--shop-item-bg);
+            border-radius: 10px;
+            padding: 9.8px;
+            text-align: center;
+        }
+        .stat-item .stat-value {
+            font-size: 21.6px;
+            font-weight: bold;
+        }
+        .stat-item .stat-label {
+            font-size: 10.8px;
+            opacity: 0.6;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 5.9px;
+            justify-content: center;
+            margin-bottom: 7.8px;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            padding: 4.9px 11.8px;
+            font-size: 11.8px;
+            background: var(--shop-item-bg);
+            border: 2px solid var(--shop-item-border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text);
+        }
+        .mode-btn.active {
+            border-color: #27ae60;
+            background: rgba(39,174,96,0.15);
+        }
+        .mode-btn:hover { opacity: 0.8; }
+
+        .timer-display {
+            font-size: 25.5px;
+            font-weight: bold;
+            color: var(--gameover-color);
+            margin: 5.9px 0;
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--modal-bg);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-box {
+            background: var(--modal-content);
+            color: var(--modal-text);
+            padding: 19.6px 24.5px;
+            border-radius: 12px;
+            max-width: 412px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: background 0.3s, color 0.3s;
+        }
+        .modal-box h2 {
+            text-align: center;
+            margin-bottom: 11.8px;
+            font-size: 21.6px;
+        }
+        .modal-close {
+            display: block;
+            margin: 11.8px auto 0;
+            padding: 5.9px 24.5px;
+            font-size: 13.7px;
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .modal-close:hover { background: var(--btn-hover); }
+
+        .leader-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            padding: 7.8px 11.8px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            font-size: 15.7px;
+            gap: 7.8px;
+        }
+        .leader-item .pos { font-weight: bold; width: 34px; text-align: center; font-size: 17.6px; }
+        .leader-item .name { flex: 1; text-align: left; font-weight: 500; }
+        .leader-item .lscore { font-weight: bold; font-size: 15.7px; color: var(--header-text); }
+        .leader-empty { text-align: center; opacity: 0.5; padding: 19.6px 0; font-size: 13.7px; }
+        .leader-item:first-child .pos { color: #ffd700; }
+        .leader-item:nth-child(2) .pos { color: #c0c0c0; }
+        .leader-item:nth-child(3) .pos { color: #cd7f32; }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #27ae60;
+            color: white;
+            padding: 7.8px 17.6px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 13.7px;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: fadePage 0.3s ease;
+        }
+        .toast-error { background: #e74c3c; }
+        .toast-gold { background: #f39c12; }
+
+        .tutorial-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
             justify-content: center;
-            animation: btnFloat 2s ease-in-out infinite;
+            align-items: center;
+            z-index: 1500;
         }
-        @keyframes btnFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
+        .tutorial-overlay.active { display: flex; }
+        .tutorial-box {
+            background: var(--modal-content);
+            color: var(--modal-text);
+            padding: 24.5px 29.4px;
+            border-radius: 12px;
+            max-width: 392px;
+            width: 90%;
+            text-align: center;
+            transition: background 0.3s, color 0.3s;
         }
-        .magic-btn:hover {
-            transform: scale(1.15);
-            box-shadow: 0 8px 48px rgba(192, 132, 252, 0.6);
-        }
-        .magic-btn:active {
-            transform: scale(0.9);
-        }
-
-        /* ЛЕТАЮЩИЕ СЕРДЦА */
-        .floating-heart {
-            position: fixed;
-            pointer-events: none;
-            z-index: 50;
-            font-size: 28px;
-            opacity: 0;
-            animation: floatHeart 7s linear forwards;
-            filter: drop-shadow(0 0 20px rgba(255, 0, 100, 0.3));
-        }
-        @keyframes floatHeart {
-            0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.2); }
-            10% { opacity: 1; transform: translateY(-30px) rotate(15deg) scale(1); }
-            90% { opacity: 0.9; }
-            100% { opacity: 0; transform: translateY(-1000px) rotate(720deg) scale(1.5); }
+        .tutorial-box h3 { font-size: 21.6px; margin-bottom: 9.8px; }
+        .tutorial-box p { font-size: 14.7px; opacity: 0.8; margin-bottom: 14.7px; line-height: 1.5; }
+        .tutorial-box .tutorial-progress {
+            font-size: 12.7px;
+            opacity: 0.5;
+            margin-bottom: 9.8px;
         }
 
-        /* ЛЕПЕСТКИ (ЦВЕТОЧНЫЙ ДОЖДЬ) */
-        .petal {
-            position: fixed;
-            pointer-events: none;
-            z-index: 3;
-            font-size: 24px;
-            opacity: 0;
-            animation: petalFall linear forwards;
-            filter: drop-shadow(0 0 10px rgba(255, 0, 100, 0.2));
+        .settings-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 9.8px;
+            margin-top: 9.8px;
         }
-        @keyframes petalFall {
-            0% { opacity: 0; transform: translateY(-50px) rotate(0deg) scale(0.5); }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.6; }
-            100% { opacity: 0; transform: translateY(calc(100vh + 100px)) rotate(720deg) scale(1.2); }
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7.8px 11.8px;
+            background: var(--shop-item-bg);
+            border-radius: 8px;
         }
+        .settings-item-label {
+            font-weight: bold;
+            font-size: 13.7px;
+        }
+        .settings-item-control {
+            display: flex;
+            gap: 5.9px;
+            align-items: center;
+        }
+        .settings-btn {
+            padding: 3.9px 11.8px;
+            font-size: 11.8px;
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .settings-btn:hover { background: var(--btn-hover); }
+        .settings-btn.active { background: #27ae60; }
 
-        /* ШЛЕЙФ ЗА МЫШКОЙ */
-        .trail-particle {
-            position: fixed;
-            pointer-events: none;
-            z-index: 40;
-            font-size: 16px;
-            opacity: 1;
-            animation: trailFade 0.8s ease-out forwards;
-        }
-        @keyframes trailFade {
-            0% { opacity: 1; transform: scale(1) rotate(0deg); }
-            100% { opacity: 0; transform: scale(0.2) rotate(180deg) translateY(-30px); }
-        }
-
-        /* ФЕЙЕРВЕРК */
-        .firework-particle {
-            position: fixed;
-            pointer-events: none;
-            z-index: 60;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            animation: fireworkExplode 1.5s ease-out forwards;
-        }
-        @keyframes fireworkExplode {
-            0% { opacity: 1; transform: translate(0, 0) scale(1); }
-            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
-        }
-
-        @media (max-width: 600px) {
-            .confession-box { padding: 30px 20px; border-radius: 32px; }
-            .magic-btn { width: 60px; height: 60px; font-size: 28px; bottom: 20px; right: 20px; }
-            .fire-text { font-size: clamp(32px, 12vw, 50px); letter-spacing: 3px; }
-            .custom-cursor { display: none; }
-            body { cursor: auto; }
-            .magic-btn { cursor: pointer; }
-        }
-        @media (max-width: 400px) {
-            .confession-box { padding: 20px 15px; }
-            .confession-text { font-size: 14px; line-height: 1.8; }
+        @media (max-width: 500px) {
+            .grid-wrapper { padding: 4.9px; }
+            .grid { gap: 4.9px; }
+            .tile { font-size: 17.6px; }
+            .tile[data-value="128"] { font-size: 15.7px; }
+            .tile[data-value="256"] { font-size: 15.7px; }
+            .tile[data-value="512"] { font-size: 15.7px; }
+            .tile[data-value="1024"] { font-size: 12.7px; }
+            .tile[data-value="2048"] { font-size: 12.7px; }
+            .menu-title { font-size: 41.2px; margin-top: 14.7px; }
+            h1 { font-size: 19.6px; }
+            .score-container span { font-size: 13.7px; }
+            .btn { padding: 4.9px 11.8px; font-size: 10.8px; }
+            .modal-box { padding: 14.7px; }
+            .shop-item { padding: 5.9px 9.8px; flex-wrap: wrap; gap: 3.9px; }
+            .shop-item-name { font-size: 12.7px; }
+            .stat-grid { grid-template-columns: 1fr 1fr; gap: 3.9px; }
+            .stat-item .stat-value { font-size: 17.6px; }
+            .leader-item { font-size: 12.7px; padding: 5.9px 9.8px; }
+            .leader-item .pos { width: 27px; font-size: 13.7px; }
+            .leader-item .lscore { font-size: 12.7px; }
+            .combo-display { font-size: 31.4px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- =========================================================== -->
-    <!-- КАСТОМНЫЙ КУРСОР -->
-    <!-- =========================================================== -->
-    <div class="custom-cursor" id="customCursor"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="particle-container" id="particleContainer"></div>
 
-    <!-- =========================================================== -->
-    <!-- ЭКРАН 1: 3D-СЦЕНА -->
-    <!-- =========================================================== -->
-    <section id="scene3d">
-        <div id="three-container"></div>
-        <div class="overlay-content">
-            <h1>💗 Ариша Мое солнышко 💜</h1>
-            <div class="subtitle">Ты — моя девочка ✨</div>
-        </div>
-        <div class="scroll-hint" onclick="document.getElementById('confession').scrollIntoView({behavior:'smooth'})">
-            ↓ Листай вниз ↓
-        </div>
-    </section>
+    <div class="container" id="app">
 
-    <!-- =========================================================== -->
-    <!-- ЭКРАН 2: ПРИЗНАНИЕ -->
-    <!-- =========================================================== -->
-    <section id="confession">
-        <div class="confession-box">
-            <h2>💜 ТЫ МОЕ СОЛНЫШКО 💗</h2>
-            <div class="confession-text">
-                <p>Каждый раз, когда я вижу твою улыбку, мир становится ярче. Ты — тот самый человек, который делает мою жизнь волшебной, наполняя её светом и теплом.</p>
-                <p>С тобой даже самые обычные дни становятся незабываемыми. Твой смех — моя любимая музыка, твои глаза — мои самые красивые звёзды, а твоя душа — моё самое безопасное место.</p>
-                <p>Я благодарен судьбе за каждую секунду, проведённую рядом с тобой. Ты — моё вдохновение, моя опора и моя самая большая радость.</p>
-                <p style="text-align: center; text-indent: 0; font-size: 22px; letter-spacing: 3px;">Ты — моё всё. ❤️</p>
+        <div class="page active" id="pageMenu">
+            <div class="menu-title">2048</div>
+            <div class="menu-subtitle">Собирай плитки, зарабатывай монеты!</div>
+            <div class="menu-buttons">
+                <button class="menu-btn" id="menuPlay">🎮 Играть</button>
+                <button class="menu-btn menu-btn-secondary" id="menuShop">🛒 Магазин</button>
+                <button class="menu-btn menu-btn-secondary" id="menuAchievements">🏅 Достижения</button>
+                <button class="menu-btn menu-btn-secondary" id="menuStats">📊 Статистика</button>
+                <button class="menu-btn menu-btn-success" id="menuBonus">🎁 Ежедневный бонус</button>
+                <button class="menu-btn menu-btn-secondary" id="menuLeaders">🏆 Лидеры</button>
+                <button class="menu-btn menu-btn-secondary" id="menuSettings">⚙️ Настройки</button>
+                <button class="menu-btn menu-btn-small" id="menuTutorial">🎓 Обучение</button>
+                <button class="menu-btn menu-btn-small" id="menuFullscreen">⛶ Полный экран</button>
+            </div>
+            <div class="menu-coins">🪙 Монет: <span id="menuCoins">0</span></div>
+        </div>
+
+        <div class="page" id="pageGame">
+            <div class="header">
+                <div class="title-block">
+                    <button class="back-btn" id="gameBack">←</button>
+                    <h1>2048</h1>
+                </div>
+                <div class="coins-display">🪙 <span id="gameCoins">0</span></div>
+            </div>
+
+            <div class="mode-selector" id="modeSelector">
+                <button class="mode-btn active" data-mode="classic">4×4</button>
+                <button class="mode-btn" data-mode="big">6×6</button>
+                <button class="mode-btn" data-mode="timer">⏱️ Таймер</button>
+            </div>
+
+            <div class="scores">
+                <div class="score-container">Счёт<span id="score">0</span></div>
+                <div class="score-container">Лучший<span id="bestScore">0</span></div>
+            </div>
+
+            <div class="timer-display" id="timerDisplay">60</div>
+
+            <div class="grid-wrapper" id="gridWrapper">
+                <div class="grid grid-4" id="grid"></div>
+                <div class="combo-display" id="comboDisplay">🔥 x2</div>
+            </div>
+
+            <div class="controls-row">
+                <button class="btn" id="undoBtn" disabled>↩</button>
+                <button class="btn" id="resetBtn">🔄 Новая</button>
+                <button class="btn btn-hint" id="hintBtn">💡</button>
+                <button class="btn btn-small" id="shareBtn">📤</button>
+            </div>
+
+            <div class="hint-area" id="hintArea">
+                <span class="hint-icon">💡</span>
+                <span id="hintText">Соединяй одинаковые плитки, чтобы получить 2048!</span>
+            </div>
+
+            <div class="game-over" id="gameOver">💥 Игра окончена!</div>
+            <div class="controls-hint">Стрелки ← ↑ → ↓ · Свайпы · F1 — подсказка</div>
+        </div>
+
+        <div class="page" id="pageShop">
+            <div class="header">
+                <div class="title-block">
+                    <button class="back-btn" id="shopBack">←</button>
+                    <h1>Магазин</h1>
+                </div>
+                <div class="coins-display">🪙 <span id="shopCoins">0</span></div>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+
+        <div class="page" id="pageAchievements">
+            <div class="header">
+                <div class="title-block">
+                    <button class="back-btn" id="achieveBack">←</button>
+                    <h1>🏅 Достижения</h1>
+                </div>
+            </div>
+            <div class="achievement-grid" id="achievementGrid"></div>
+        </div>
+
+        <div class="page" id="pageStats">
+            <div class="header">
+                <div class="title-block">
+                    <button class="back-btn" id="statsBack">←</button>
+                    <h1>📊 Статистика</h1>
+                </div>
+            </div>
+            <div class="stat-grid" id="statGrid"></div>
+        </div>
+
+        <div class="page" id="pageSettings">
+            <div class="header">
+                <div class="title-block">
+                    <button class="back-btn" id="settingsBack">←</button>
+                    <h1>⚙️ Настройки</h1>
+                </div>
+            </div>
+            <div class="settings-grid" id="settingsGrid"></div>
+        </div>
+
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal-box">
+                <h2>🏆 Таблица лидеров</h2>
+                <div id="leaderList"></div>
+                <button class="modal-close" id="modalClose">Закрыть</button>
             </div>
         </div>
-    </section>
 
-    <!-- =========================================================== -->
-    <!-- ЭКРАН 3: ОГНЕННОЕ ПРИЗНАНИЕ -->
-    <!-- =========================================================== -->
-    <section id="firetext">
-        <div class="fire-container">
-            <div class="fire-text">Я ТЕБЯ ЛЮБЛЮ</div>
-            <div class="fire-sub">✨ какашки мне в кармашки ✨</div>
+        <div class="tutorial-overlay" id="tutorialOverlay">
+            <div class="tutorial-box">
+                <h3 id="tutorialTitle">🎓 Добро пожаловать!</h3>
+                <p id="tutorialText">Соединяй одинаковые плитки, чтобы получить 2048. Используй стрелки или свайпы для управления.</p>
+                <div class="tutorial-progress" id="tutorialProgress">1 / 6</div>
+                <button class="menu-btn" id="tutorialNext">Далее →</button>
+                <button class="menu-btn menu-btn-small" id="tutorialSkip" style="margin-top:8px; background:#6c5b7b;">Пропустить</button>
+            </div>
         </div>
-        <canvas id="fireSparks" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
-    </section>
 
-    <!-- =========================================================== -->
-    <!-- МАГИЧЕСКАЯ КНОПКА -->
-    <!-- =========================================================== -->
-    <button class="magic-btn" id="magicBtn">💜</button>
-
-    <!-- =========================================================== -->
-    <!-- THREE.JS -->
-    <!-- =========================================================== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    </div>
 
     <script>
-        // =============================================================
-        // 0. КАСТОМНЫЙ КУРСОР
-        // =============================================================
-        const cursor = document.getElementById('customCursor');
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
+        (function() {
+            'use strict';
 
-        // =============================================================
-        // 1. 3D-СЦЕНА
-        // =============================================================
-        (function init3D() {
-            const container = document.getElementById('three-container');
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+            const STORAGE = {
+                BEST: 'game2048_best',
+                THEME: 'game2048_theme',
+                LEADER: 'game2048_leaders',
+                COINS: 'game2048_coins',
+                OWNED: 'game2048_owned',
+                EQUIPPED: 'game2048_equipped',
+                ACHIEVEMENTS: 'game2048_achievements',
+                STATS: 'game2048_stats',
+                BONUS: 'game2048_bonus',
+                HINTS: 'game2048_hints',
+                UNDO: 'game2048_undo',
+                SETTINGS: 'game2048_settings',
+                TUTORIAL: 'game2048_tutorial',
+                BGSKIN: 'game2048_bgskin',
+                BG_SKINS: 'game2048_bgskins_owned',
+            };
 
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0d0015);
+            const COINS_INTERVAL = 1000;
+            const HINT_PRICE = 3;
+            const UNDO_PRICE = 1;
+            const FREE_UNDO = 3;
 
-            const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-            camera.position.z = 8;
+            const ACHIEVEMENTS_LIST = [
+                { id: 'score_100', name: 'Первые 100', desc: 'Набрать 100 очков', reward: 1, check: s => s >= 100 },
+                { id: 'tile_128', name: 'Плитка 128', desc: 'Собрать плитку 128', reward: 3, check: s => s >= 128 },
+                { id: 'tile_512', name: 'Плитка 512', desc: 'Собрать плитку 512', reward: 5, check: s => s >= 512 },
+                { id: 'tile_2048', name: 'Плитка 2048!', desc: 'Собрать плитку 2048', reward: 10, check: s => s >= 2048 },
+                { id: 'five_2048', name: 'Мастер 2048', desc: 'Собрать 5 плиток 2048 за игру', reward: 25, check: s => s >= 2048 * 5 },
+                { id: 'games_10', name: 'Игровой стаж', desc: 'Сыграть 10 игр', reward: 15, check: s => s >= 10 },
+                { id: 'master_4096', name: '🧙‍♂️ Мастер 4096', desc: 'Собрать плитку 4096', reward: 10, check: s => s >= 4096 },
+                { id: 'sprinter', name: '⚡ Спринтер', desc: 'Набрать 500 очков за 30 сек в таймере', reward: 3, check: s => s >= 500 },
+                { id: 'survivor', name: '🛡️ Живучий', desc: 'Сделать 50 ходов без слияния', reward: 10, check: s => s >= 50 },
+                { id: 'precise', name: '🎯 Точный', desc: 'Закончить игру с счётом, кратным 1000', reward: 10, check: s => s >= 1000 && s % 1000 === 0 },
+                { id: 'combo_master', name: '🔥 Комбо', desc: 'Сделать 3 слияния подряд', reward: 2, check: s => s >= 3 },
+                { id: 'collector', name: '💎 Коллекционер', desc: 'Купить все темы', reward: 30, check: s => s >= 1 },
+            ];
 
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(width, height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            container.appendChild(renderer.domElement);
+            const SHOP_ITEMS = [
+                { id: 'green', type: 'tile', name: 'Зелёная', desc: 'Спокойные зелёные оттенки', price: 40, icon: '🌿' },
+                { id: 'pink', type: 'tile', name: 'Розовая', desc: 'Нежные розовые тона', price: 40, icon: '🌸' },
+                { id: 'space', type: 'tile', name: 'Космическая', desc: 'Тёмно-синие/фиолетовые оттенки', price: 50, icon: '🪐' },
+                { id: 'ocean', type: 'tile', name: 'Океан', desc: 'Голубые/бирюзовые цвета', price: 45, icon: '🌊' },
+                { id: 'orange', type: 'tile', name: 'Апельсиновая', desc: 'Оранжево-жёлтые оттенки', price: 45, icon: '🍊' },
+                { id: 'halloween', type: 'tile', name: 'Хэллоуин', desc: 'Оранжевый/чёрный/фиолетовый', price: 50, icon: '🎃' },
+                { id: 'winter', type: 'tile', name: 'Зимняя', desc: 'Бело-голубые холодные тона', price: 45, icon: '❄️' },
+                { id: 'dark', type: 'ui', name: 'Тёмная тема', desc: 'Интерфейс в тёмных тонах', price: 20, icon: '🌙' },
+            ];
 
-            const ambientLight = new THREE.AmbientLight(0x404060);
-            scene.add(ambientLight);
+            const BG_SKINS = [
+                { id: 'default', name: 'Классический', desc: 'Стандартный фон', price: 0, icon: '🎨' },
+                { id: 'dark', name: 'Тёмный', desc: 'Тёмный фон для сетки', price: 15, icon: '🌚' },
+                { id: 'ocean', name: 'Океан', desc: 'Глубокий синий', price: 20, icon: '🌊' },
+                { id: 'forest', name: 'Лес', desc: 'Зелёный лесной фон', price: 20, icon: '🌲' },
+                { id: 'sunset', name: 'Закат', desc: 'Тёплые закатные тона', price: 20, icon: '🌅' },
+                { id: 'space', name: 'Космос', desc: 'Тёмный космический фон', price: 25, icon: '🌌' },
+            ];
 
-            const light = new THREE.PointLight(0xff6b9d, 1, 30);
-            light.position.set(2, 3, 5);
-            scene.add(light);
+            let grid = [];
+            let score = 0;
+            let bestScore = parseInt(localStorage.getItem(STORAGE.BEST)) || 0;
+            let coins = parseInt(localStorage.getItem(STORAGE.COINS)) || 0;
+            let gameOver = false;
+            let isMoving = false;
+            let history = [];
+            let currentHistoryIndex = -1;
+            let lastCoinThreshold = 0;
+            let moveCount = 0;
+            let noMergeCount = 0;
+            let comboCount = 0;
+            let maxCombo = 0;
 
-            const light2 = new THREE.PointLight(0xc084fc, 0.8, 30);
-            light2.position.set(-3, -2, 4);
-            scene.add(light2);
+            let tileTheme = localStorage.getItem(STORAGE.EQUIPPED) || '';
+            let uiTheme = localStorage.getItem(STORAGE.THEME) || 'light';
+            let bgSkin = localStorage.getItem(STORAGE.BGSKIN) || 'default';
 
-            const ringGeometry = new THREE.TorusGeometry(2.2, 0.12, 32, 64);
-            const ringMaterial = new THREE.MeshPhysicalMaterial({
-                color: 0xff6b9d,
-                metalness: 0.8,
-                roughness: 0.15,
-                emissive: 0xc084fc,
-                emissiveIntensity: 0.15,
-                transparent: true,
-                opacity: 0.95,
-            });
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            ring.rotation.x = Math.PI / 2.8;
-            ring.rotation.z = 0.3;
-            scene.add(ring);
+            let ownedItems = [];
+            let ownedBgSkins = [];
+            try { ownedItems = JSON.parse(localStorage.getItem(STORAGE.OWNED)) || []; } catch { ownedItems = []; }
+            try { ownedBgSkins = JSON.parse(localStorage.getItem(STORAGE.BG_SKINS)) || ['default']; } catch { ownedBgSkins = ['default']; }
 
-            const ring2Geometry = new THREE.TorusGeometry(2.5, 0.05, 24, 48);
-            const ring2Material = new THREE.MeshPhysicalMaterial({
-                color: 0xc084fc,
-                metalness: 0.6,
-                roughness: 0.2,
-                emissive: 0xff6b9d,
-                emissiveIntensity: 0.1,
-                transparent: true,
-                opacity: 0.6,
-            });
-            const ring2 = new THREE.Mesh(ring2Geometry, ring2Material);
-            ring2.rotation.x = Math.PI / 2.5;
-            ring2.rotation.z = -0.2;
-            scene.add(ring2);
+            let achievements = {};
+            try { achievements = JSON.parse(localStorage.getItem(STORAGE.ACHIEVEMENTS)) || {}; } catch { achievements = {}; }
 
-            const diamondGeo = new THREE.OctahedronGeometry(0.45);
-            const diamondMat = new THREE.MeshPhysicalMaterial({
-                color: 0xffd700,
-                metalness: 0.9,
-                roughness: 0.05,
-                emissive: 0xff6b9d,
-                emissiveIntensity: 0.2,
-                transparent: true,
-                opacity: 0.95,
-            });
-            const diamond = new THREE.Mesh(diamondGeo, diamondMat);
-            diamond.position.set(0, 0, 0);
-            scene.add(diamond);
+            let stats = {};
+            try { stats = JSON.parse(localStorage.getItem(STORAGE.STATS)) || {}; } catch { stats = {}; }
+            if (!stats.games) stats.games = 0;
+            if (!stats.maxScore) stats.maxScore = 0;
+            if (!stats.maxTile) stats.maxTile = 0;
+            if (!stats.totalScore) stats.totalScore = 0;
+            if (!stats.totalCoins) stats.totalCoins = 0;
 
-            const particlesCount = 600;
-            const positions = new Float32Array(particlesCount * 3);
-            const colors = new Float32Array(particlesCount * 3);
-            const sizes = new Float32Array(particlesCount);
+            let bonusData = {};
+            try { bonusData = JSON.parse(localStorage.getItem(STORAGE.BONUS)) || {}; } catch { bonusData = {}; }
+            if (!bonusData.day) bonusData.day = 0;
+            if (!bonusData.lastClaim) bonusData.lastClaim = 0;
 
-            for (let i = 0; i < particlesCount; i++) {
-                const radius = 3 + Math.random() * 5;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.random() * Math.PI * 2;
+            let hintData = {};
+            try { hintData = JSON.parse(localStorage.getItem(STORAGE.HINTS)) || {}; } catch { hintData = {}; }
+            if (!hintData.free) hintData.free = 5;
 
-                positions[i * 3] = radius * Math.sin(theta) * Math.cos(phi);
-                positions[i * 3 + 1] = radius * Math.sin(theta) * Math.sin(phi);
-                positions[i * 3 + 2] = radius * Math.cos(theta);
+            let undoData = {};
+            try { undoData = JSON.parse(localStorage.getItem(STORAGE.UNDO)) || {}; } catch { undoData = {}; }
+            if (!undoData.free) undoData.free = FREE_UNDO;
 
-                const color = new THREE.Color().setHSL(0.88 + Math.random() * 0.12, 0.7, 0.6);
-                colors[i * 3] = color.r;
-                colors[i * 3 + 1] = color.g;
-                colors[i * 3 + 2] = color.b;
+            let settings = {};
+            try { settings = JSON.parse(localStorage.getItem(STORAGE.SETTINGS)) || {}; } catch { settings = {}; }
+            if (settings.sound === undefined) settings.sound = true;
+            if (settings.vibration === undefined) settings.vibration = true;
+            if (settings.difficulty === undefined) settings.difficulty = 'medium';
 
-                sizes[i] = 0.02 + Math.random() * 0.08;
+            let tutorialShown = localStorage.getItem(STORAGE.TUTORIAL) === 'true';
+
+            let currentMode = 'classic';
+            let timerSeconds = 60;
+            let timerInterval = null;
+            let gameActive = false;
+
+            const pages = {
+                menu: document.getElementById('pageMenu'),
+                game: document.getElementById('pageGame'),
+                shop: document.getElementById('pageShop'),
+                achievements: document.getElementById('pageAchievements'),
+                stats: document.getElementById('pageStats'),
+                settings: document.getElementById('pageSettings'),
+            };
+            const menuCoins = document.getElementById('menuCoins');
+            const gameCoins = document.getElementById('gameCoins');
+            const shopCoins = document.getElementById('shopCoins');
+            const gridEl = document.getElementById('grid');
+            const gridWrapper = document.getElementById('gridWrapper');
+            const scoreEl = document.getElementById('score');
+            const bestScoreEl = document.getElementById('bestScore');
+            const gameOverEl = document.getElementById('gameOver');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const comboDisplay = document.getElementById('comboDisplay');
+            const undoBtn = document.getElementById('undoBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const hintBtn = document.getElementById('hintBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalClose = document.getElementById('modalClose');
+            const leaderList = document.getElementById('leaderList');
+            const shopGrid = document.getElementById('shopGrid');
+            const achievementGrid = document.getElementById('achievementGrid');
+            const statGrid = document.getElementById('statGrid');
+            const settingsGrid = document.getElementById('settingsGrid');
+            const hintText = document.getElementById('hintText');
+            const particleContainer = document.getElementById('particleContainer');
+
+            // ===== ФОН =====
+            function initParticles() {
+                const canvas = document.getElementById('particles-canvas');
+                const ctx = canvas.getContext('2d');
+                let w, h;
+                const particles = [];
+                const COUNT = 50;
+                function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+                window.addEventListener('resize', resize);
+                resize();
+                class Particle {
+                    constructor() { this.reset(); }
+                    reset() {
+                        this.x = Math.random() * w;
+                        this.y = Math.random() * h;
+                        this.size = Math.random() * 5 + 2;
+                        this.speedX = (Math.random() - 0.5) * 0.3;
+                        this.speedY = (Math.random() - 0.5) * 0.3;
+                        this.opacity = Math.random() * 0.25 + 0.05;
+                        this.color = `hsla(${Math.random() * 60 + 200}, 70%, 70%, `;
+                    }
+                    update() {
+                        this.x += this.speedX; this.y += this.speedY;
+                        if (this.x < 0 || this.x > w) this.speedX *= -1;
+                        if (this.y < 0 || this.y > h) this.speedY *= -1;
+                    }
+                    draw() {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fillStyle = this.color + this.opacity + ')';
+                        ctx.fill();
+                        ctx.shadowColor = this.color + '0.2)';
+                        ctx.shadowBlur = 10;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+                for (let i = 0; i < COUNT; i++) particles.push(new Particle());
+                function animate() {
+                    ctx.clearRect(0, 0, w, h);
+                    particles.forEach(p => { p.update(); p.draw(); });
+                    requestAnimationFrame(animate);
+                }
+                animate();
+            }
+            initParticles();
+
+            // ===== ЗВУКИ =====
+            let audioCtx = null;
+            function initAudio() { if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)(); }
+            function playSound(freq, duration, type = 'sine', volume = 0.2) {
+                if (!settings.sound) return;
+                try {
+                    initAudio();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {}
+            }
+            function playClickSound() { playSound(800, 0.05, 'sine', 0.1); }
+            function playMergeSound() { playSound(523, 0.12, 'sine', 0.25); setTimeout(() => playSound(659, 0.1, 'sine', 0.2), 80); }
+            function playGameOverSound() { playSound(440, 0.3, 'sawtooth', 0.15); setTimeout(() => playSound(349, 0.4, 'sawtooth', 0.12), 200); }
+            function playWinSound() { playSound(523, 0.1, 'square', 0.15); setTimeout(() => playSound(659, 0.1, 'square', 0.15), 100); setTimeout(() => playSound(784, 0.2, 'square', 0.15), 200); }
+            function playCoinSound() { playSound(1200, 0.08, 'sine', 0.15); setTimeout(() => playSound(1500, 0.08, 'sine', 0.12), 60); }
+            function playAchievementSound() { playSound(880, 0.1, 'square', 0.15); setTimeout(() => playSound(1100, 0.1, 'square', 0.15), 120); setTimeout(() => playSound(1320, 0.15, 'square', 0.15), 240); }
+
+            function vibrate(duration = 20) { if (!settings.vibration) return; try { if (navigator.vibrate) navigator.vibrate(duration); } catch (e) {} }
+
+            // ===== UI =====
+            function applyUITheme(theme) {
+                uiTheme = theme;
+                localStorage.setItem(STORAGE.THEME, theme);
+                if (theme === 'dark') document.body.classList.add('dark');
+                else document.body.classList.remove('dark');
+            }
+            if (uiTheme === 'dark') applyUITheme('dark');
+            else applyUITheme('light');
+
+            function applyBgSkin(skin) {
+                bgSkin = skin;
+                localStorage.setItem(STORAGE.BGSKIN, skin);
+                gridWrapper.className = 'grid-wrapper grid-bg-' + skin;
+                if (skin === 'default') gridWrapper.className = 'grid-wrapper';
+            }
+            applyBgSkin(bgSkin);
+
+            function setTileTheme(theme) {
+                tileTheme = theme;
+                localStorage.setItem(STORAGE.EQUIPPED, theme);
+                if (pages.game.classList.contains('active')) renderTiles(false);
             }
 
-            const particleGeo = new THREE.BufferGeometry();
-            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-            particleGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-            const particleMat = new THREE.PointsMaterial({
-                size: 0.08,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending,
-                sizeAttenuation: true,
-            });
-            const particleSystem = new THREE.Points(particleGeo, particleMat);
-            scene.add(particleSystem);
-
-            const starsCount = 800;
-            const starPos = new Float32Array(starsCount * 3);
-            for (let i = 0; i < starsCount * 3; i++) {
-                starPos[i] = (Math.random() - 0.5) * 50;
+            // ===== ТОСТЫ, МОНЕТЫ =====
+            function showToast(text, type = '') {
+                const toast = document.createElement('div');
+                toast.className = 'toast' + (type ? ' ' + type : '');
+                toast.textContent = text;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
             }
-            const starGeo = new THREE.BufferGeometry();
-            starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-            const starMat = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: 0.03,
-                transparent: true,
-                opacity: 0.6,
-                blending: THREE.AdditiveBlending,
-            });
-            const stars = new THREE.Points(starGeo, starMat);
-            scene.add(stars);
 
-            let clock = new THREE.Clock();
-
-            function animate() {
-                const time = clock.getElapsedTime();
-
-                ring.rotation.y += 0.008;
-                ring2.rotation.y -= 0.006;
-                diamond.rotation.x = time * 0.5;
-                diamond.rotation.y = time * 0.7;
-
-                particleSystem.rotation.y = time * 0.03;
-                particleSystem.rotation.x = Math.sin(time * 0.01) * 0.1;
-
-                stars.rotation.y = time * 0.005;
-
-                const scale = 1 + Math.sin(time * 2) * 0.05;
-                diamond.scale.set(scale, scale, scale);
-
-                renderer.render(scene, camera);
-                requestAnimationFrame(animate);
+            function updateCoinsDisplay() {
+                menuCoins.textContent = coins;
+                gameCoins.textContent = coins;
+                shopCoins.textContent = coins;
             }
-            animate();
 
+            function addCoins(amount, from = '') {
+                if (amount === 0) return;
+                coins += amount;
+                localStorage.setItem(STORAGE.COINS, coins);
+                stats.totalCoins += amount;
+                localStorage.setItem(STORAGE.STATS, JSON.stringify(stats));
+                updateCoinsDisplay();
+                if (amount > 0) {
+                    playCoinSound();
+                    showToast(`+${amount} 🪙${from ? ' (' + from + ')' : ''}`, 'toast-gold');
+                }
+            }
+
+            function spendCoins(amount, reason = '') {
+                if (coins < amount) {
+                    showToast(`Недостаточно монет! Нужно ${amount} 🪙`, 'toast-error');
+                    return false;
+                }
+                coins -= amount;
+                localStorage.setItem(STORAGE.COINS, coins);
+                updateCoinsDisplay();
+                if (reason) showToast(`-${amount} 🪙 ${reason}`, 'toast-error');
+                return true;
+            }
+
+            function checkCoinReward(newScore) {
+                const newThreshold = Math.floor(newScore / COINS_INTERVAL);
+                const earned = (newThreshold - lastCoinThreshold) * 10;
+                if (earned > 0) {
+                    addCoins(earned, 'за очки');
+                    lastCoinThreshold = newThreshold;
+                }
+            }
+
+            // ===== ДОСТИЖЕНИЯ =====
+            function checkAchievements(extraData = {}) {
+                let anyNew = false;
+                const { sprintScore, noMergeCount: nmc, comboCount: cc, finalScore, totalThemes } = extraData;
+                ACHIEVEMENTS_LIST.forEach(a => {
+                    if (achievements[a.id]) return;
+                    let checkValue = 0;
+                    switch (a.id) {
+                        case 'score_100': case 'tile_128': case 'tile_512': case 'tile_2048': case 'five_2048': case 'master_4096': checkValue = score; break;
+                        case 'games_10': checkValue = stats.games || 0; break;
+                        case 'sprinter': checkValue = sprintScore || 0; break;
+                        case 'survivor': checkValue = nmc || noMergeCount || 0; break;
+                        case 'combo_master': checkValue = cc || comboCount || 0; break;
+                        case 'precise': checkValue = finalScore || score || 0; break;
+                        case 'collector': checkValue = totalThemes || ownedItems.filter(i => SHOP_ITEMS.find(s => s.id === i && s.type === 'tile')).length || 0; break;
+                        default: checkValue = 0;
+                    }
+                    if (a.check(checkValue)) {
+                        achievements[a.id] = true;
+                        localStorage.setItem(STORAGE.ACHIEVEMENTS, JSON.stringify(achievements));
+                        addCoins(a.reward, 'достижение: ' + a.name);
+                        anyNew = true;
+                        playAchievementSound();
+                        showToast('🏅 Достижение: ' + a.name + ' (+' + a.reward + ' 🪙)', 'toast-gold');
+                    }
+                });
+                return anyNew;
+            }
+
+            function renderAchievements() {
+                let html = '';
+                ACHIEVEMENTS_LIST.forEach(a => {
+                    const unlocked = !!achievements[a.id];
+                    html += `<div class="achievement-item ${unlocked ? 'unlocked' : ''}">
+                        <div class="achievement-item-info">
+                            <div class="achievement-item-name">${unlocked ? '✅' : '🔒'} ${a.name}</div>
+                            <div class="achievement-item-desc">${a.desc} (+${a.reward} 🪙)</div>
+                        </div>
+                        <div class="achievement-status">${unlocked ? '🏅' : '⬜'}</div>
+                    </div>`;
+                });
+                achievementGrid.innerHTML = html;
+            }
+
+            // ===== СТАТИСТИКА =====
+            function renderStats() {
+                const data = [
+                    { label: 'Всего игр', value: stats.games || 0 },
+                    { label: 'Макс. счёт', value: stats.maxScore || 0 },
+                    { label: 'Макс. плитка', value: stats.maxTile || 0 },
+                    { label: 'Всего очков', value: stats.totalScore || 0 },
+                    { label: 'Всего монет', value: stats.totalCoins || 0 },
+                    { label: 'Макс. комбо', value: maxCombo || 0 },
+                ];
+                let html = '';
+                data.forEach(d => {
+                    html += `<div class="stat-item"><div class="stat-value">${d.value}</div><div class="stat-label">${d.label}</div></div>`;
+                });
+                statGrid.innerHTML = html;
+            }
+
+            // ===== БОНУС =====
+            function getBonusAmount(day) {
+                const amounts = [0, 1, 3, 5, 7, 10, 12, 15];
+                if (day < 1) return 1;
+                if (day > 7) return 15;
+                return amounts[day] || 1;
+            }
+
+            function claimBonus() {
+                const now = Date.now();
+                const dayMs = 86400000;
+                const lastClaim = bonusData.lastClaim || 0;
+                if (now - lastClaim < dayMs) {
+                    const remaining = Math.ceil((dayMs - (now - lastClaim)) / 3600000);
+                    showToast(`⏳ Бонус через ${remaining} ч`, 'toast-error');
+                    return;
+                }
+                let day = (bonusData.day || 0) + 1;
+                if (day > 7) day = 1;
+                bonusData.day = day;
+                bonusData.lastClaim = now;
+                if (!bonusData.startTime) bonusData.startTime = now;
+                localStorage.setItem(STORAGE.BONUS, JSON.stringify(bonusData));
+                const amount = getBonusAmount(day);
+                addCoins(amount, 'ежедневный бонус (день ' + day + ')');
+                showToast(`🎁 Бонус дня ${day}: +${amount} 🪙`, 'toast-gold');
+                updateMenuBonusDisplay();
+            }
+
+            function updateMenuBonusDisplay() {
+                const now = Date.now();
+                const dayMs = 86400000;
+                const lastClaim = bonusData.lastClaim || 0;
+                const day = bonusData.day || 0;
+                const btn = document.getElementById('menuBonus');
+                if (now - lastClaim < dayMs) {
+                    const remaining = Math.ceil((dayMs - (now - lastClaim)) / 3600000);
+                    btn.textContent = `⏳ Бонус через ${remaining} ч (день ${day})`;
+                } else {
+                    const nextDay = day >= 7 ? 1 : day + 1;
+                    const amount = getBonusAmount(nextDay);
+                    btn.textContent = `🎁 Забрать бонус (день ${nextDay}, ${amount} 🪙)`;
+                }
+            }
+
+            // ===== ЛИДЕРЫ =====
+            function getLeaders() { try { return JSON.parse(localStorage.getItem(STORAGE.LEADER)) || []; } catch { return []; } }
+            function saveLeaders(leaders) { localStorage.setItem(STORAGE.LEADER, JSON.stringify(leaders)); }
+            function addLeader(score) {
+                if (score === 0) return;
+                let leaders = getLeaders();
+                let name = prompt('🎉 Новый рекорд! Введите ваше имя:', 'Игрок');
+                if (!name || name.trim() === '') name = 'Игрок';
+                name = name.trim().substring(0, 20);
+                leaders.push({ name, score });
+                leaders.sort((a, b) => b.score - a.score);
+                if (leaders.length > 5) leaders = leaders.slice(0, 5);
+                saveLeaders(leaders);
+            }
+
+            function renderLeaders() {
+                const leaders = getLeaders();
+                if (leaders.length === 0) {
+                    leaderList.innerHTML = '<div class="leader-empty">Пока нет рекордов 😢<br>Станьте первым!</div>';
+                    return;
+                }
+                let html = '';
+                leaders.forEach((item, i) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = i < 3 ? medals[i] : `${i+1}.`;
+                    html += `<div class="leader-item"><span class="pos">${medal}</span><span class="name">${item.name}</span><span class="lscore">${item.score}</span></div>`;
+                });
+                leaderList.innerHTML = html;
+            }
+
+            // ===== МАГАЗИН =====
+            function renderShop() {
+                let html = '';
+                html += `<div class="shop-item" style="border-color: #e74c3c;">
+                    <div class="shop-item-info"><div class="shop-item-name">🔄 Сбросить тему</div><div class="shop-item-desc">Вернуть стандартный вид плиток и светлую тему</div></div>
+                    <button class="shop-btn reset-theme" id="resetThemeBtn">Сбросить</button>
+                </div>`;
+
+                SHOP_ITEMS.forEach(item => {
+                    if (item.type !== 'tile') return;
+                    const owned = ownedItems.includes(item.id);
+                    const isEquipped = (tileTheme === item.id);
+                    const canAfford = coins >= item.price;
+                    let btnText, btnClass = 'shop-btn', disabled = false;
+                    if (isEquipped) { btnText = '✅ Используется'; btnClass = 'shop-btn owned'; disabled = true; }
+                    else if (owned) { btnText = 'Использовать'; btnClass = 'shop-btn'; }
+                    else { btnText = `Купить (${item.price}🪙)`;
+                        btnClass = 'shop-btn';
+                        disabled = !canAfford; }
+                    html += `<div class="shop-item">
+                        <div class="shop-item-info"><div class="shop-item-name">${item.icon} ${item.name}</div><div class="shop-item-desc">${item.desc}</div></div>
+                        <button class="${btnClass}" data-id="${item.id}" data-type="${item.type}" ${disabled ? 'disabled' : ''}>${btnText}</button>
+                    </div>`;
+                });
+
+                const darkOwned = ownedItems.includes('dark');
+                const isDarkEquipped = (uiTheme === 'dark');
+                html += `<div class="shop-item">
+                    <div class="shop-item-info"><div class="shop-item-name">🌙 Тёмная тема</div><div class="shop-item-desc">Интерфейс в тёмных тонах (20 🪙)</div></div>
+                    <button class="shop-btn ${isDarkEquipped ? 'owned' : ''}" id="darkThemeBtn" ${isDarkEquipped ? 'disabled' : ''}>
+                        ${isDarkEquipped ? '✅ Используется' : (darkOwned ? 'Использовать' : 'Купить (20🪙)')}
+                    </button>
+                </div>`;
+
+                html += `<div style="margin-top:10px; font-size:13px; opacity:0.6; text-align:left;">🖼️ Скины фона:</div>`;
+                BG_SKINS.forEach(skin => {
+                    const owned = ownedBgSkins.includes(skin.id);
+                    const isEquipped = (bgSkin === skin.id);
+                    const canAfford = coins >= skin.price;
+                    let btnText, btnClass = 'shop-btn', disabled = false;
+                    if (skin.price === 0) { btnText = '✅ Бесплатно';
+                        btnClass = 'shop-btn owned';
+                        disabled = true; } else if (isEquipped) { btnText = '✅ Используется';
+                        btnClass = 'shop-btn owned';
+                        disabled = true; } else if (owned) { btnText = 'Использовать';
+                        btnClass = 'shop-btn'; } else { btnText = `Купить (${skin.price}🪙)`;
+                        btnClass = 'shop-btn';
+                        disabled = !canAfford; }
+                    html += `<div class="shop-item">
+                        <div class="shop-item-info"><div class="shop-item-name">${skin.icon} ${skin.name}</div><div class="shop-item-desc">${skin.desc}</div></div>
+                        <button class="${btnClass}" data-id="${skin.id}" data-type="bg" ${disabled ? 'disabled' : ''}>${btnText}</button>
+                    </div>`;
+                });
+
+                shopGrid.innerHTML = html;
+
+                document.getElementById('resetThemeBtn').addEventListener('click', function() {
+                    setTileTheme('');
+                    applyUITheme('light');
+                    renderShop();
+                    showToast('Тема сброшена на стандартную (светлую)');
+                });
+
+                document.getElementById('darkThemeBtn').addEventListener('click', function() {
+                    const owned = ownedItems.includes('dark');
+                    if (owned) { applyUITheme('dark');
+                        renderShop(); return; }
+                    if (coins < 20) { showToast('Недостаточно монет! Нужно 20 🪙', 'toast-error'); return; }
+                    if (!confirm('Купить тёмную тему за 20 монет?')) return;
+                    spendCoins(20);
+                    ownedItems.push('dark');
+                    localStorage.setItem(STORAGE.OWNED, JSON.stringify(ownedItems));
+                    applyUITheme('dark');
+                    renderShop();
+                    updateCoinsDisplay();
+                });
+
+                shopGrid.querySelectorAll('.shop-btn:not(.reset-theme)').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        const id = this.dataset.id;
+                        const type = this.dataset.type;
+                        if (!id || !type) return;
+                        if (type === 'tile') {
+                            const item = SHOP_ITEMS.find(i => i.id === id);
+                            if (!item) return;
+                            const owned = ownedItems.includes(id);
+                            if (owned && tileTheme !== id) { setTileTheme(id);
+                                renderShop(); return; }
+                            if (!owned) {
+                                if (coins < item.price) { showToast('Недостаточно монет!', 'toast-error'); return; }
+                                if (!confirm(`Купить "${item.name}" за ${item.price} монет?`)) return;
+                                spendCoins(item.price);
+                                ownedItems.push(id);
+                                localStorage.setItem(STORAGE.OWNED, JSON.stringify(ownedItems));
+                                setTileTheme(id);
+                                renderShop();
+                                updateCoinsDisplay();
+                                checkAchievements({ totalThemes: ownedItems.filter(i => SHOP_ITEMS.find(s => s.id === i && s.type === 'tile')).length });
+                            }
+                        }
+                        if (type === 'bg') {
+                            const skin = BG_SKINS.find(s => s.id === id);
+                            if (!skin) return;
+                            const owned = ownedBgSkins.includes(id);
+                            if (owned && bgSkin !== id) { applyBgSkin(id);
+                                renderShop(); return; }
+                            if (!owned && skin.price > 0) {
+                                if (coins < skin.price) { showToast('Недостаточно монет!', 'toast-error'); return; }
+                                if (!confirm(`Купить "${skin.name}" за ${skin.price} монет?`)) return;
+                                spendCoins(skin.price);
+                                ownedBgSkins.push(id);
+                                localStorage.setItem(STORAGE.BG_SKINS, JSON.stringify(ownedBgSkins));
+                                applyBgSkin(id);
+                                renderShop();
+                                updateCoinsDisplay();
+                            }
+                        }
+                    });
+                });
+            }
+
+            // ===== ЭФФЕКТ ВЗРЫВА (ЗОЛОТЫЕ ИСКРЫ) =====
+            function spawnExplosion(x, y, count = 20) {
+                const container = particleContainer;
+                const colors = ['#ffd700', '#ffaa00', '#ffcc44', '#ffe066', '#ffdd55'];
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 30 + Math.random() * 70;
+                    const tx = Math.cos(angle) * dist;
+                    const ty = Math.sin(angle) * dist - 20;
+                    const size = 4 + Math.random() * 8;
+                    p.style.cssText = `
+                        left: ${x}px; top: ${y}px;
+                        --tx: ${tx}px; --ty: ${ty}px;
+                        width: ${size}px; height: ${size}px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                        box-shadow: 0 0 ${size}px rgba(255,215,0,0.4);
+                    `;
+                    container.appendChild(p);
+                    setTimeout(() => p.remove(), 700);
+                }
+            }
+
+            // ===== ИГРОВАЯ ЛОГИКА =====
+            function getSize() { return currentMode === 'big' ? 6 : 4; }
+
+            function initGrid() {
+                const size = getSize();
+                grid = [];
+                for (let r = 0; r < size; r++) {
+                    grid[r] = [];
+                    for (let c = 0; c < size; c++) grid[r][c] = 0;
+                }
+                score = 0;
+                lastCoinThreshold = 0;
+                gameOver = false;
+                gameActive = true;
+                gameOverEl.style.display = 'none';
+                history = [];
+                currentHistoryIndex = -1;
+                moveCount = 0;
+                noMergeCount = 0;
+                comboCount = 0;
+
+                spawnTile();
+                spawnTile();
+                pushHistory();
+                renderBackground();
+                renderTiles(true);
+                updateScore();
+                updateUndoButton();
+                updateHint();
+
+                if (currentMode === 'timer') {
+                    timerSeconds = 60;
+                    timerDisplay.style.display = 'block';
+                    timerDisplay.textContent = timerSeconds;
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerInterval = setInterval(() => {
+                        timerSeconds--;
+                        timerDisplay.textContent = timerSeconds;
+                        if (timerSeconds <= 0) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            gameActive = false;
+                            gameOver = true;
+                            gameOverEl.style.display = 'block';
+                            playGameOverSound();
+                            updateHint();
+                            checkGameEnd();
+                        }
+                    }, 1000);
+                } else {
+                    timerDisplay.style.display = 'none';
+                    if (timerInterval) { clearInterval(timerInterval);
+                        timerInterval = null; }
+                }
+                const tileThemesOwned = ownedItems.filter(i => SHOP_ITEMS.find(s => s.id === i && s.type === 'tile')).length;
+                checkAchievements({ totalThemes: tileThemesOwned });
+            }
+
+            function renderBackground() {
+                const size = getSize();
+                gridEl.innerHTML = '';
+                gridEl.className = 'grid ' + (size === 6 ? 'grid-6' : 'grid-4');
+                for (let i = 0; i < size * size; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell-bg';
+                    gridEl.appendChild(cell);
+                }
+            }
+
+            function getTileSize() {
+                const rect = gridWrapper.getBoundingClientRect();
+                const size = getSize();
+                const padding = window.innerWidth <= 500 ? 4.9 : 7.8;
+                const gap = window.innerWidth <= 500 ? 4.9 : 7.8;
+                const totalGap = gap * (size - 1);
+                const avail = rect.width - padding * 2;
+                return (avail - totalGap) / size;
+            }
+
+            function renderTiles(animate = false) {
+                document.querySelectorAll('.tile').forEach(el => el.remove());
+                const size = getSize();
+                const padding = window.innerWidth <= 500 ? 4.9 : 7.8;
+                const gap = window.innerWidth <= 500 ? 4.9 : 7.8;
+                const tileSize = getTileSize();
+
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const val = grid[r][c];
+                        if (val === 0) continue;
+                        const tile = document.createElement('div');
+                        tile.className = 'tile';
+                        if (animate) tile.classList.add('pop');
+                        tile.setAttribute('data-value', val);
+                        if (tileTheme) tile.classList.add(tileTheme);
+                        tile.textContent = val;
+                        const left = padding + c * (tileSize + gap);
+                        const top = padding + r * (tileSize + gap);
+                        tile.style.width = tileSize + 'px';
+                        tile.style.height = tileSize + 'px';
+                        tile.style.left = left + 'px';
+                        tile.style.top = top + 'px';
+                        if (val < 1024) tile.style.fontSize = (tileSize * 0.48) + 'px';
+                        else if (val < 8192) tile.style.fontSize = (tileSize * 0.36) + 'px';
+                        else tile.style.fontSize = (tileSize * 0.28) + 'px';
+                        gridWrapper.appendChild(tile);
+                    }
+                }
+            }
+
+            function updateScore() {
+                scoreEl.textContent = score;
+                if (score > bestScore) { bestScore = score;
+                    localStorage.setItem(STORAGE.BEST, bestScore); }
+                bestScoreEl.textContent = bestScore;
+                checkCoinReward(score);
+                updateHint();
+                checkAchievements();
+            }
+
+            function pushHistory() {
+                const state = { grid: grid.map(row => [...row]), score: score, moveCount: moveCount, noMergeCount: noMergeCount,
+                    comboCount: comboCount };
+                if (currentHistoryIndex < history.length - 1) history = history.slice(0, currentHistoryIndex + 1);
+                history.push(state);
+                if (history.length > 30) history.shift();
+                currentHistoryIndex = history.length - 1;
+                updateUndoButton();
+            }
+
+            function undo() {
+                if (currentHistoryIndex <= 0 || isMoving) return;
+                if (undoData.free > 0) { undoData.free--;
+                    localStorage.setItem(STORAGE.UNDO, JSON.stringify(undoData)); } else { if (!spendCoins(UNDO_PRICE, 'за отмену хода')) return; }
+                currentHistoryIndex--;
+                const state = history[currentHistoryIndex];
+                if (!state) return;
+                grid = state.grid.map(row => [...row]);
+                score = state.score;
+                moveCount = state.moveCount || 0;
+                noMergeCount = state.noMergeCount || 0;
+                comboCount = state.comboCount || 0;
+                gameOver = false;
+                gameActive = true;
+                gameOverEl.style.display = 'none';
+                renderTiles(false);
+                updateScore();
+                updateUndoButton();
+                updateHint();
+                playClickSound();
+            }
+
+            function updateUndoButton() {
+                const hasFree = undoData.free > 0;
+                const hasCoins = coins >= UNDO_PRICE;
+                undoBtn.disabled = currentHistoryIndex <= 0 || isMoving || (!hasFree && !hasCoins);
+                undoBtn.textContent = `↩${hasFree ? ' ('+undoData.free+')' : ' 🪙'}`;
+            }
+
+            function spawnTile() {
+                const size = getSize();
+                const empty = [];
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (grid[r][c] === 0) empty.push({ r, c });
+                    }
+                }
+                if (empty.length === 0) return false;
+                const { r, c } = empty[Math.floor(Math.random() * empty.length)];
+                grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+                return true;
+            }
+
+            function slideRow(row) {
+                let filtered = row.filter(v => v !== 0);
+                let newRow = [];
+                let i = 0;
+                let addedScore = 0;
+                let merged = false;
+                while (i < filtered.length) {
+                    if (i + 1 < filtered.length && filtered[i] === filtered[i + 1]) {
+                        const val = filtered[i] * 2;
+                        newRow.push(val);
+                        addedScore += val;
+                        merged = true;
+                        i += 2;
+                    } else {
+                        newRow.push(filtered[i]);
+                        i++;
+                    }
+                }
+                while (newRow.length < getSize()) newRow.push(0);
+                return { row: newRow, score: addedScore, merged };
+            }
+
+            function move(direction) {
+                if (gameOver || isMoving || !gameActive) return;
+                if (currentMode === 'timer' && !gameActive) return;
+                isMoving = true;
+
+                const size = getSize();
+                let moved = false;
+                let totalAdded = 0;
+                let anyMerged = false;
+                const oldGrid = grid.map(row => [...row]);
+
+                if (direction === 'left') {
+                    for (let r = 0; r < size; r++) {
+                        const result = slideRow(grid[r]);
+                        grid[r] = result.row;
+                        totalAdded += result.score;
+                        if (result.merged) anyMerged = true;
+                    }
+                } else if (direction === 'right') {
+                    for (let r = 0; r < size; r++) {
+                        const reversed = [...grid[r]].reverse();
+                        const result = slideRow(reversed);
+                        grid[r] = result.row.reverse();
+                        totalAdded += result.score;
+                        if (result.merged) anyMerged = true;
+                    }
+                } else if (direction === 'up') {
+                    for (let c = 0; c < size; c++) {
+                        const col = [];
+                        for (let r = 0; r < size; r++) col.push(grid[r][c]);
+                        const result = slideRow(col);
+                        for (let r = 0; r < size; r++) grid[r][c] = result.row[r];
+                        totalAdded += result.score;
+                        if (result.merged) anyMerged = true;
+                    }
+                } else if (direction === 'down') {
+                    for (let c = 0; c < size; c++) {
+                        const col = [];
+                        for (let r = size - 1; r >= 0; r--) col.push(grid[r][c]);
+                        const result = slideRow(col);
+                        for (let r = size - 1; r >= 0; r--) grid[r][c] = result.row[size - 1 - r];
+                        totalAdded += result.score;
+                        if (result.merged) anyMerged = true;
+                    }
+                }
+
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (grid[r][c] !== oldGrid[r][c]) moved = true;
+                    }
+                }
+
+                if (moved) {
+                    moveCount++;
+                    playClickSound();
+                    vibrate(10);
+
+                    if (anyMerged) {
+                        noMergeCount = 0;
+                        comboCount++;
+                        if (comboCount > maxCombo) maxCombo = comboCount;
+                        if (comboCount >= 3) {
+                            showCombo(comboCount);
+                            checkAchievements({ comboCount: comboCount });
+                        }
+                        const rect = gridWrapper.getBoundingClientRect();
+                        const cx = rect.left + rect.width / 2;
+                        const cy = rect.top + rect.height / 2;
+                        spawnExplosion(cx, cy, 15 + comboCount * 3);
+                        playMergeSound();
+                        if (totalAdded >= 2048) playWinSound();
+                    } else {
+                        noMergeCount++;
+                        if (noMergeCount >= 50) checkAchievements({ noMergeCount: noMergeCount });
+                        comboCount = 0;
+                        hideCombo();
+                    }
+
+                    score += totalAdded;
+                    stats.totalScore += totalAdded;
+                    if (score > stats.maxScore) stats.maxScore = score;
+                    const maxTile = Math.max(...grid.flat());
+                    if (maxTile > stats.maxTile) stats.maxTile = maxTile;
+                    localStorage.setItem(STORAGE.STATS, JSON.stringify(stats));
+
+                    checkAchievements();
+                    spawnTile();
+                    pushHistory();
+                    renderTiles(true);
+                    updateScore();
+
+                    if (isGameOver()) {
+                        gameOver = true;
+                        gameActive = false;
+                        gameOverEl.style.display = 'block';
+                        playGameOverSound();
+                        updateHint();
+                        checkGameEnd();
+                    }
+                } else {
+                    comboCount = 0;
+                    hideCombo();
+                }
+
+                isMoving = false;
+                updateUndoButton();
+            }
+
+            function showCombo(count) {
+                comboDisplay.textContent = `🔥 x${count}`;
+                comboDisplay.className = 'combo-display show';
+                setTimeout(() => { comboDisplay.className = 'combo-display'; }, 800);
+            }
+
+            function hideCombo() { comboDisplay.className = 'combo-display'; }
+
+            function isGameOver() {
+                const size = getSize();
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (grid[r][c] === 0) return false;
+                    }
+                }
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const v = grid[r][c];
+                        if (c < size - 1 && grid[r][c + 1] === v) return false;
+                        if (r < size - 1 && grid[r + 1][c] === v) return false;
+                    }
+                }
+                return true;
+            }
+
+            function checkGameEnd() {
+                stats.games++;
+                localStorage.setItem(STORAGE.STATS, JSON.stringify(stats));
+                if (score > 0 && score % 1000 === 0) checkAchievements({ finalScore: score });
+                if (score > 0) {
+                    const leaders = getLeaders();
+                    if (leaders.length < 5 || score > leaders[leaders.length - 1]?.score) {
+                        setTimeout(() => { addLeader(score);
+                            renderLeaders(); }, 400);
+                    }
+                }
+                checkAchievements();
+            }
+
+            // ===== ПОДСКАЗКИ =====
+            function getHint() {
+                if (gameOver || !gameActive) { showToast('Игра окончена или не активна', 'toast-error'); return; }
+                if (hintData.free > 0) {
+                    hintData.free--;
+                    localStorage.setItem(STORAGE.HINTS, JSON.stringify(hintData));
+                    showToast(`💡 Подсказка (осталось ${hintData.free} бесплатных)`, 'toast-gold');
+                } else {
+                    if (!spendCoins(HINT_PRICE, 'за подсказку')) return;
+                    showToast(`💡 Подсказка куплена за ${HINT_PRICE} 🪙`, 'toast-gold');
+                }
+                const size = getSize();
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const v = grid[r][c];
+                        if (v === 0) continue;
+                        if (c < size - 1 && grid[r][c + 1] === v) { highlightTile(r, c);
+                            highlightTile(r, c + 1); return; }
+                        if (r < size - 1 && grid[r + 1][c] === v) { highlightTile(r, c);
+                            highlightTile(r + 1, c); return; }
+                    }
+                }
+                showToast('Нет доступных слияний 🤔', 'toast-error');
+            }
+
+            function highlightTile(r, c) {
+                const tiles = document.querySelectorAll('.tile');
+                const size = getSize();
+                const padding = window.innerWidth <= 500 ? 4.9 : 7.8;
+                const gap = window.innerWidth <= 500 ? 4.9 : 7.8;
+                const tileSize = getTileSize();
+                tiles.forEach(t => {
+                    const left = padding + c * (tileSize + gap);
+                    const top = padding + r * (tileSize + gap);
+                    if (parseInt(t.style.left) === left && parseInt(t.style.top) === top) {
+                        t.style.boxShadow = '0 0 30px #ffd700';
+                        t.style.transition = 'box-shadow 0.3s';
+                        setTimeout(() => { t.style.boxShadow = 'none'; }, 1500);
+                    }
+                });
+            }
+
+            function updateHint() {
+                if (gameOver) { hintText.textContent = '💥 Игра окончена! Начни новую, чтобы попробовать снова.'; return; }
+                const size = getSize();
+                const flat = grid.flat();
+                const emptyCells = flat.filter(v => v === 0).length;
+                const maxTile = Math.max(...flat, 0);
+                if (score === 0 && emptyCells === size * size - 2) hintText.textContent = 'Соединяй одинаковые плитки, чтобы получить 2048!';
+                else if (score < 100) hintText.textContent = 'Начинай с малого! Соединяй двойки и четвёрки.';
+                else if (score < 500) hintText.textContent = 'Хороший темп! Старайся держать большие числа в углу.';
+                else if (score < 1000) hintText.textContent = 'Ты на полпути к 2048! Продолжай в том же духе!';
+                else if (score < 2000) hintText.textContent = '🔥 Ты близко! Осталось совсем немного!';
+                else if (maxTile >= 2048) hintText.textContent = '🎉 ТЫ ПОБЕДИЛ! Собери 4096, чтобы побить рекорд!';
+                else if (emptyCells < 4 && !gameOver) hintText.textContent = '⚠️ Осторожно! Поле почти заполнено. Планируй ходы!';
+                else {
+                    const hints = ['Думай на несколько ходов вперёд!', 'Старайся не двигать большие числа с места.',
+                        'Держи самые большие числа в одном углу.', 'Используй весь экран, не зажимайся в одном месте.',
+                        'Каждый ход приближает тебя к 2048!'
+                    ];
+                    hintText.textContent = hints[Math.floor(Math.random() * hints.length)];
+                }
+            }
+
+            // ===== ОБУЧЕНИЕ =====
+            const tutorialSteps = [
+                { title: '🎓 Добро пожаловать!', text: 'Соединяй одинаковые плитки, чтобы получить 2048. Используй стрелки или свайпы для управления.' },
+                { title: '🔄 Слияние', text: 'Когда две одинаковые плитки сталкиваются, они сливаются в одну с удвоенным значением. Например, 2+2=4.' },
+                { title: '🎯 Цель', text: 'Твоя цель — собрать плитку 2048. Но игра не заканчивается — можно собирать 4096, 8192 и дальше!' },
+                { title: '🪙 Монеты', text: 'За каждую 1000 очков ты получаешь 10 монет. Монеты можно тратить в магазине на темы, скины и эффекты.' },
+                { title: '🏅 Достижения', text: 'Выполняй сложные задания и получай монеты. Попробуй собрать 4096 или сделать 50 ходов без слияния!' },
+                { title: '🎮 Удачи!', text: 'Теперь ты готов! Играй, зарабатывай монеты и становись лучшим в таблице лидеров! 🚀' },
+            ];
+            let tutorialStep = 0;
+
+            function startTutorial() {
+                tutorialStep = 0;
+                document.getElementById('tutorialOverlay').classList.add('active');
+                updateTutorial();
+            }
+
+            function updateTutorial() {
+                const step = tutorialSteps[tutorialStep];
+                document.getElementById('tutorialTitle').textContent = step.title;
+                document.getElementById('tutorialText').textContent = step.text;
+                document.getElementById('tutorialProgress').textContent = `${tutorialStep + 1} / ${tutorialSteps.length}`;
+                document.getElementById('tutorialNext').textContent = tutorialStep === tutorialSteps.length - 1 ? '🏁 Начать!' :
+                    'Далее →';
+            }
+
+            document.getElementById('tutorialNext').addEventListener('click', function() {
+                if (tutorialStep < tutorialSteps.length - 1) { tutorialStep++;
+                    updateTutorial(); } else { document.getElementById('tutorialOverlay').classList.remove('active');
+                    localStorage.setItem(STORAGE.TUTORIAL, 'true');
+                    tutorialShown = true; }
+            });
+            document.getElementById('tutorialSkip').addEventListener('click', function() {
+                document.getElementById('tutorialOverlay').classList.remove('active');
+                localStorage.setItem(STORAGE.TUTORIAL, 'true');
+                tutorialShown = true;
+            });
+
+            // ===== НАСТРОЙКИ =====
+            function renderSettings() {
+                let html = '';
+                html += `<div class="settings-item"><span class="settings-item-label">🔊 Звук</span><div class="settings-item-control">
+                    <button class="settings-btn ${settings.sound ? 'active' : ''}" data-setting="sound" data-value="true">Вкл</button>
+                    <button class="settings-btn ${!settings.sound ? 'active' : ''}" data-setting="sound" data-value="false">Выкл</button>
+                </div></div>`;
+                html += `<div class="settings-item"><span class="settings-item-label">📳 Вибрация</span><div class="settings-item-control">
+                    <button class="settings-btn ${settings.vibration ? 'active' : ''}" data-setting="vibration" data-value="true">Вкл</button>
+                    <button class="settings-btn ${!settings.vibration ? 'active' : ''}" data-setting="vibration" data-value="false">Выкл</button>
+                </div></div>`;
+                html += `<div class="settings-item"><span class="settings-item-label">🎯 Сложность</span><div class="settings-item-control">
+                    <button class="settings-btn ${settings.difficulty === 'easy' ? 'active' : ''}" data-setting="difficulty" data-value="easy">Легко</button>
+                    <button class="settings-btn ${settings.difficulty === 'medium' ? 'active' : ''}" data-setting="difficulty" data-value="medium">Средне</button>
+                    <button class="settings-btn ${settings.difficulty === 'hard' ? 'active' : ''}" data-setting="difficulty" data-value="hard">Сложно</button>
+                </div></div>`;
+                settingsGrid.innerHTML = html;
+                settingsGrid.querySelectorAll('.settings-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const setting = this.dataset.setting;
+                        const value = this.dataset.value;
+                        if (setting === 'sound') settings.sound = value === 'true';
+                        else if (setting === 'vibration') settings.vibration = value === 'true';
+                        else if (setting === 'difficulty') settings.difficulty = value;
+                        localStorage.setItem(STORAGE.SETTINGS, JSON.stringify(settings));
+                        renderSettings();
+                    });
+                });
+            }
+
+            // ===== ПОЛНЫЙ ЭКРАН =====
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); } else { if (
+                        document.exitFullscreen) document.exitFullscreen(); }
+            }
+
+            // ===== ПОДЕЛИТЬСЯ =====
+            function shareResult() {
+                const text =
+                    `🎮 2048\n🏆 Счёт: ${score}\n🪙 Монет: ${coins}\n${gameOver ? '💥 Игра окончена!' : '🔥 Игра продолжается!'}\n#2048 #game`;
+                if (navigator.share) { navigator.share({ title: 'Мой результат в 2048', text: text }).catch(() => {}); } else {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('📤 Результат скопирован в буфер!', 'toast-gold');
+                    }).catch(() => { prompt('Скопируй текст:', text); });
+                }
+            }
+
+            // ===== НАВИГАЦИЯ =====
+            function showPage(name) {
+                Object.keys(pages).forEach(key => { pages[key].classList.toggle('active', key === name); });
+                updateCoinsDisplay();
+                if (name === 'shop') renderShop();
+                if (name === 'game') {
+                    if (!grid.length) initGrid();
+                    setTimeout(() => { renderTiles(false);
+                        updateHint(); }, 50);
+                }
+                if (name === 'menu') { renderLeaders();
+                    updateMenuBonusDisplay(); }
+                if (name === 'achievements') renderAchievements();
+                if (name === 'stats') renderStats();
+                if (name === 'settings') renderSettings();
+                if (name === 'game' && !tutorialShown) setTimeout(startTutorial, 500);
+            }
+
+            // ===== ОБРАБОТЧИКИ =====
+            document.getElementById('menuPlay').addEventListener('click', () => { if (!grid.length || currentMode !== 'classic')
+                    initGrid();
+                showPage('game'); });
+            document.getElementById('menuShop').addEventListener('click', () => showPage('shop'));
+            document.getElementById('menuAchievements').addEventListener('click', () => showPage('achievements'));
+            document.getElementById('menuStats').addEventListener('click', () => showPage('stats'));
+            document.getElementById('menuBonus').addEventListener('click', claimBonus);
+            document.getElementById('menuLeaders').addEventListener('click', () => { renderLeaders();
+                modalOverlay.classList.add('active'); });
+            document.getElementById('menuSettings').addEventListener('click', () => showPage('settings'));
+            document.getElementById('menuTutorial').addEventListener('click', startTutorial);
+            document.getElementById('menuFullscreen').addEventListener('click', toggleFullscreen);
+
+            document.getElementById('gameBack').addEventListener('click', () => { if (timerInterval) clearInterval(timerInterval);
+                showPage('menu'); });
+            document.getElementById('shopBack').addEventListener('click', () => showPage('menu'));
+            document.getElementById('achieveBack').addEventListener('click', () => showPage('menu'));
+            document.getElementById('statsBack').addEventListener('click', () => showPage('menu'));
+            document.getElementById('settingsBack').addEventListener('click', () => showPage('menu'));
+
+            modalClose.addEventListener('click', () => modalOverlay.classList.remove('active'));
+            modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove(
+                    'active'); });
+
+            shareBtn.addEventListener('click', shareResult);
+
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const mode = this.dataset.mode;
+                    if (mode === 'classic') currentMode = 'classic';
+                    else if (mode === 'big') currentMode = 'big';
+                    else if (mode === 'timer') currentMode = 'timer';
+                    initGrid();
+                    renderBackground();
+                    renderTiles(false);
+                    updateScore();
+                });
+            });
+
+            resetBtn.addEventListener('click', () => {
+                if (confirm('Начать новую игру? Текущий прогресс будет потерян.')) {
+                    if (timerInterval) clearInterval(timerInterval);
+                    initGrid();
+                }
+            });
+            undoBtn.addEventListener('click', undo);
+            hintBtn.addEventListener('click', getHint);
+
+            document.addEventListener('keydown', (e) => {
+                const map = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'up', 'ArrowDown': 'down' };
+                const dir = map[e.key];
+                if (dir && pages.game.classList.contains('active')) { e.preventDefault();
+                    move(dir); }
+                if (e.key === 'z' && (e.ctrlKey || e.metaKey) && pages.game.classList.contains('active')) { e.preventDefault();
+                    undo(); }
+                if (e.key === 'h' || e.key === 'H') { if (pages.game.classList.contains('active')) getHint(); }
+                if (e.key === 'F1') { e.preventDefault(); if (pages.game.classList.contains('active')) getHint(); }
+                if (e.key === 'l' || e.key === 'L') { if (!pages.game.classList.contains('active')) { renderLeaders();
+                        modalOverlay.classList.add('active'); } }
+                if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); }
+            });
+
+            let touchStartX = 0,
+                touchStartY = 0;
+            gridWrapper.addEventListener('touchstart', (e) => {
+                const t = e.touches[0];
+                touchStartX = t.clientX;
+                touchStartY = t.clientY;
+            });
+            gridWrapper.addEventListener('touchmove', (e) => e.preventDefault());
+            gridWrapper.addEventListener('touchend', (e) => {
+                if (touchStartX === 0 && touchStartY === 0) return;
+                const t = e.changedTouches[0];
+                const dx = t.clientX - touchStartX;
+                const dy = t.clientY - touchStartY;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+                if (Math.max(absDx, absDy) < 20) return;
+                if (absDx > absDy) { move(dx > 0 ? 'right' : 'left'); } else { move(dy > 0 ? 'down' : 'up'); }
+                touchStartX = 0;
+                touchStartY = 0;
+            });
+
+            let resizeTimeout;
             window.addEventListener('resize', () => {
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-                renderer.setSize(w, h);
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { if (pages.game.classList.contains('active')) renderTiles(false); },
+                100);
             });
+
+            document.addEventListener('click', initAudio, { once: true });
+            document.addEventListener('touchstart', initAudio, { once: true });
+
+            initGrid();
+            updateCoinsDisplay();
+            showPage('menu');
+            updateMenuBonusDisplay();
+            setInterval(updateMenuBonusDisplay, 60000);
+
+            const tileThemesOwned = ownedItems.filter(i => SHOP_ITEMS.find(s => s.id === i && s.type === 'tile')).length;
+            checkAchievements({ totalThemes: tileThemesOwned });
+
+            if (!tutorialShown) setTimeout(startTutorial, 1000);
+
         })();
-
-        // =============================================================
-        // 2. ОГНЕННЫЕ ИСКРЫ
-        // =============================================================
-        (function fireSparks() {
-            const canvas = document.getElementById('fireSparks');
-            const ctx = canvas.getContext('2d');
-            let w, h;
-            const sparks = [];
-
-            function resize() {
-                w = canvas.width = window.innerWidth;
-                h = canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            class Spark {
-                constructor() { this.reset(); }
-                reset() {
-                    this.x = Math.random() * w;
-                    this.y = h + Math.random() * 50;
-                    this.size = Math.random() * 4 + 1;
-                    this.speedY = Math.random() * 3 + 1.5;
-                    this.speedX = (Math.random() - 0.5) * 0.8;
-                    this.life = Math.random() * 0.8 + 0.2;
-                    this.decay = 0.002 + Math.random() * 0.005;
-                    this.hue = 320 + Math.random() * 60;
-                }
-                update() {
-                    this.y -= this.speedY;
-                    this.x += this.speedX + Math.sin(this.y * 0.02) * 0.3;
-                    this.life -= this.decay;
-                    this.size *= 0.998;
-                    if (this.life <= 0 || this.y < -50) this.reset();
-                }
-                draw() {
-                    ctx.save();
-                    ctx.globalAlpha = this.life * 0.8;
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = `hsl(${this.hue}, 100%, 60%)`;
-                    ctx.fillStyle = `hsl(${this.hue}, 100%, 60%)`;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
-
-            for (let i = 0; i < 80; i++) {
-                const s = new Spark();
-                s.y = Math.random() * h;
-                sparks.push(s);
-            }
-
-            function animateFire() {
-                ctx.clearRect(0, 0, w, h);
-                sparks.forEach(s => { s.update(); s.draw(); });
-                requestAnimationFrame(animateFire);
-            }
-            animateFire();
-        })();
-
-        // =============================================================
-        // 3. ЛЕТАЮЩИЕ СЕРДЦА
-        // =============================================================
-        function createFloatingHeart() {
-            const el = document.createElement('div');
-            el.className = 'floating-heart';
-            const emojis = ['❤️', '💖', '💗', '💕', '🩷', '💜', '✨', '🌟'];
-            el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            el.style.left = Math.random() * 100 + '%';
-            el.style.top = Math.random() * 30 + 10 + '%';
-            el.style.fontSize = (Math.random() * 26 + 18) + 'px';
-            el.style.animationDuration = (Math.random() * 5 + 6) + 's';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 11000);
-        }
-
-        for (let i = 0; i < 20; i++) setTimeout(createFloatingHeart, i * 200);
-        setInterval(createFloatingHeart, 500);
-
-        // =============================================================
-        // 4. ЛЕПЕСТКИ (ЦВЕТОЧНЫЙ ДОЖДЬ)
-        // =============================================================
-        function createPetal() {
-            const el = document.createElement('div');
-            el.className = 'petal';
-            const petals = ['🌸', '🌺', '💮', '🌷', '🌹', '🪷'];
-            el.textContent = petals[Math.floor(Math.random() * petals.length)];
-            el.style.left = Math.random() * 100 + '%';
-            el.style.top = '-20px';
-            el.style.fontSize = (Math.random() * 20 + 16) + 'px';
-            el.style.animationDuration = (Math.random() * 6 + 4) + 's';
-            el.style.animationDelay = '0s';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 10000);
-        }
-
-        for (let i = 0; i < 10; i++) setTimeout(createPetal, i * 300);
-        setInterval(createPetal, 400);
-
-        // =============================================================
-        // 5. ШЛЕЙФ ЗА МЫШКОЙ
-        // =============================================================
-        let trailTimeout;
-        document.addEventListener('mousemove', (e) => {
-            clearTimeout(trailTimeout);
-            const el = document.createElement('div');
-            el.className = 'trail-particle';
-            const emojis = ['💜', '❤️', '✨', '💕', '🩷'];
-            el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            el.style.left = e.clientX + 'px';
-            el.style.top = e.clientY + 'px';
-            el.style.fontSize = (Math.random() * 14 + 10) + 'px';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 900);
-        });
-
-        // =============================================================
-        // 6. ФЕЙЕРВЕРК (КЛИК В ЛЮБОМ МЕСТЕ)
-        // =============================================================
-        document.addEventListener('click', (e) => {
-            const colors = ['#ff6b9d', '#c084fc', '#ffd700', '#ff2d75', '#60a5fa', '#f472b6'];
-            for (let i = 0; i < 60; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'firework-particle';
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 100 + Math.random() * 200;
-                const tx = Math.cos(angle) * distance;
-                const ty = Math.sin(angle) * distance;
-                particle.style.setProperty('--tx', tx + 'px');
-                particle.style.setProperty('--ty', ty + 'px');
-                particle.style.left = e.clientX + 'px';
-                particle.style.top = e.clientY + 'px';
-                particle.style.width = (Math.random() * 8 + 4) + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.boxShadow = `0 0 20px ${particle.style.background}`;
-                particle.style.animationDuration = (Math.random() * 0.8 + 0.6) + 's';
-                document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 2000);
-            }
-        });
-
-        // =============================================================
-        // 7. ВСПЛЫВАЮЩИЕ КОМПЛИМЕНТЫ
-        // =============================================================
-        const compliments = [
-            'Ты прекрасна ✨',
-            'Я тебя обожаю 💗',
-            'Ты — моя прелесть 💜',
-            'Твоя улыбка — лучшее что есть на свете 🌟',
-            'Ты — моя девочка ❤️',
-            'Ты невероятна 🌺',
-            'Ты — мой сиксевен ✨',
-            'С тобой я счастлив 💖',
-            'Ты — мое тьмо 💜'
-        ];
-        let complimentIndex = 0;
-
-        function showCompliment() {
-            const el = document.createElement('div');
-            el.className = 'floating-compliment';
-            el.textContent = compliments[complimentIndex % compliments.length];
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 3000);
-            complimentIndex++;
-        }
-
-        setInterval(showCompliment, 12000);
-        setTimeout(showCompliment, 3000);
-
-        // =============================================================
-        // 8. МАГИЧЕСКАЯ КНОПКА (УСИЛЕННЫЙ ВЗРЫВ)
-        // =============================================================
-        document.getElementById('magicBtn').addEventListener('click', function(e) {
-            // Вибрация на телефоне
-            if (navigator.vibrate) navigator.vibrate(50);
-
-            // Звук (через Web Audio)
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 800 + Math.random() * 400;
-                osc.type = 'sine';
-                gain.gain.value = 0.1;
-                osc.start();
-                setTimeout(() => { osc.stop(); }, 150);
-            } catch(e) {}
-
-            // Супер-взрыв эмодзи (60 штук)
-            for (let i = 0; i < 60; i++) {
-                setTimeout(() => {
-                    const el = document.createElement('div');
-                    el.className = 'floating-heart';
-                    const emojis = ['❤️', '💖', '💗', '💕', '🩷', '💜', '✨', '🌟', '🎆', '🎇', '💫', '🌺', '🌸', '🔥'];
-                    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                    el.style.left = (30 + Math.random() * 40) + '%';
-                    el.style.top = (20 + Math.random() * 50) + '%';
-                    el.style.fontSize = (Math.random() * 40 + 20) + 'px';
-                    el.style.animationDuration = (Math.random() * 4 + 3) + 's';
-                    el.style.filter = 'drop-shadow(0 0 40px rgba(255,0,100,0.6))';
-                    document.body.appendChild(el);
-                    setTimeout(() => el.remove(), 7000);
-                }, i * 30);
-            }
-
-            // Анимация кнопки
-            this.style.transform = 'scale(0.6)';
-            this.style.boxShadow = '0 0 100px rgba(192, 132, 252, 1)';
-            setTimeout(() => {
-                this.style.transform = 'scale(1)';
-                this.style.boxShadow = '0 8px 32px rgba(192, 132, 252, 0.4)';
-            }, 400);
-        });
-
-        // =============================================================
-        // 9. ФОН ПЕРЕЛИВАЕТСЯ (ПОСТОЯННО МЕНЯЕТСЯ)
-        // =============================================================
-        let hue1 = 320;
-        let hue2 = 280;
-        setInterval(() => {
-            hue1 = (hue1 + 0.3) % 360;
-            hue2 = (hue2 + 0.2) % 360; 
-            const scene3d = document.getElementById('scene3d');
-            if (scene3d) {
-                scene3d.style.background = 
-                    `radial-gradient(ellipse at center, hsl(${hue1}, 70%, 15%) 0%, hsl(${hue2}, 80%, 5%) 100%)`;
-            }
-        }, 50);
-
-        console.log('💗💜 МЕГА-САЙТ ЛЮБВИ ОБНОВЛЁН! 💜💗');
-        console.log('✨ Кликай в любом месте — будет фейерверк! ✨');
-        console.log('💬 Каждые 12 секунд — всплывают комплименты!');
     </script>
 </body>
 </html>
